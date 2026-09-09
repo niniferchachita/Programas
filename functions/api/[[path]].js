@@ -48,7 +48,7 @@ export async function onRequest(context) {
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
-    // --- CATEGORIAS / SECCIONES ---
+    // --- CATEGORIAS ---
     if (path === 'categorias' && request.method === 'GET') {
       const { results } = await env.DB.prepare("SELECT * FROM categorias").all();
       return new Response(JSON.stringify(results || []), { headers });
