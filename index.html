@@ -374,7 +374,14 @@
                 const resCat = await fetch('/api/categorias');
                 const cats = await resCat.json();
                 const currentVal = catSelect.value;
-                catSelect.innerHTML = `<option value="Todas">Todas</option>` + cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+                
+                let optionsHtml = `<option value="Todas">Todas</option>`;
+                if (cats && cats.length > 0) {
+                    optionsHtml += cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+                } else {
+                    optionsHtml += `<option value="General">General</option>`;
+                }
+                catSelect.innerHTML = optionsHtml;
                 if(currentVal) catSelect.value = currentVal;
             } catch(e){}
 
@@ -684,8 +691,17 @@
             try {
                 const resCat = await fetch('/api/categorias');
                 const cats = await resCat.json();
-                catSelect.innerHTML = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
-            } catch(e){}
+
+                let optionsHtml = "";
+                if (cats && cats.length > 0) {
+                    optionsHtml = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+                } else {
+                    optionsHtml = `<option value="General">General</option>`;
+                }
+                catSelect.innerHTML = optionsHtml;
+            } catch(e){
+                catSelect.innerHTML = `<option value="General">General</option>`;
+            }
 
             try {
                 const resProd = await fetch('/api/productos');
@@ -706,12 +722,12 @@
         async function addProduct() {
             const name = document.getElementById("newProdName").value.trim();
             const price = parseFloat(document.getElementById("newProdPrice").value);
-            const category = document.getElementById("newProdCategory").value;
+            const category = document.getElementById("newProdCategory").value || "General";
             const requiresSauce = document.getElementById("newProdSauce").checked;
             const imageFile = document.getElementById("newProdImage").files[0];
 
-            if(!name || isNaN(price) || price <= 0 || !category) {
-                return alert("Ingresa un nombre, un precio válido y asigna una categoría.");
+            if(!name || isNaN(price) || price <= 0) {
+                return alert("Ingresa un nombre y un precio válido.");
             }
 
             let imageBase64 = "";
@@ -791,15 +807,17 @@
 
         async function addCategory() {
             const name = document.getElementById("newCatName").value.trim();
-            if(!name) return;
+            if(!name) return alert("Escribe el nombre de la nueva sección.");
+
             await fetch('/api/categorias', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre: name })
             });
+
             document.getElementById("newCatName").value = "";
-            renderCategoriesList();
-            renderProductsTable();
+            await renderCategoriesList();
+            await renderProductsTable();
         }
 
         async function renderSaucesList() {
@@ -817,12 +835,14 @@
 
         async function addSauce() {
             const name = document.getElementById("newSauceName").value.trim();
-            if(!name) return;
+            if(!name) return alert("Escribe el nombre de la salsa o término.");
+
             await fetch('/api/salsas', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre: name })
             });
+
             document.getElementById("newSauceName").value = "";
             renderSaucesList();
         }
