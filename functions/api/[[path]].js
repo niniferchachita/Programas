@@ -13,12 +13,19 @@ export async function onRequest(context) {
     return new Response(null, { headers });
   }
 
-  // Comprobar si existe el binding
-  if (!env.DB) {
-    return new Response(JSON.stringify({ error: "Binding DB no encontrado en Cloudflare." }), { status: 500, headers });
-  }
-
   try {
+    // --- CATEGORIAS ---
+    if (path === 'categorias' && request.method === 'GET') {
+      const { results } = await env.DB.prepare("SELECT * FROM categorias").all();
+      return new Response(JSON.stringify(results || []), { headers });
+    }
+
+    if (path === 'categorias' && request.method === 'POST') {
+      const data = await request.json();
+      await env.DB.prepare("INSERT INTO categorias (nombre) VALUES (?)").bind(data.nombre).run();
+      return new Response(JSON.stringify({ success: true }), { headers });
+    }
+
     // --- PRODUCTOS ---
     if (path === 'productos' && request.method === 'GET') {
       const { results } = await env.DB.prepare("SELECT * FROM productos").all();
@@ -36,18 +43,6 @@ export async function onRequest(context) {
     if (path.startsWith('productos/') && request.method === 'DELETE') {
       const id = path.split('/')[1];
       await env.DB.prepare("DELETE FROM productos WHERE id = ?").bind(id).run();
-      return new Response(JSON.stringify({ success: true }), { headers });
-    }
-
-    // --- CATEGORIAS ---
-    if (path === 'categorias' && request.method === 'GET') {
-      const { results } = await env.DB.prepare("SELECT * FROM categorias").all();
-      return new Response(JSON.stringify(results || []), { headers });
-    }
-
-    if (path === 'categorias' && request.method === 'POST') {
-      const data = await request.json();
-      await env.DB.prepare("INSERT INTO categorias (nombre) VALUES (?)").bind(data.nombre).run();
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
