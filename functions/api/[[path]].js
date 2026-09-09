@@ -1,6 +1,5 @@
 export async function onRequest(context) {
   const { request, env, params } = context;
-  const url = new URL(request.url);
   const path = params.path ? params.path.join('/') : '';
 
   const headers = {
@@ -18,7 +17,7 @@ export async function onRequest(context) {
     // --- PRODUCTOS ---
     if (path === 'productos' && request.method === 'GET') {
       const { results } = await env.DB.prepare("SELECT * FROM productos").all();
-      return new Response(JSON.stringify(results), { headers });
+      return new Response(JSON.stringify(results || []), { headers });
     }
 
     if (path === 'productos' && request.method === 'POST') {
@@ -38,14 +37,38 @@ export async function onRequest(context) {
     // --- PEDIDOS ---
     if (path === 'pedidos' && request.method === 'GET') {
       const { results } = await env.DB.prepare("SELECT * FROM pedidos").all();
-      return new Response(JSON.stringify(results), { headers });
+      return new Response(JSON.stringify(results || []), { headers });
     }
 
     if (path === 'pedidos' && request.method === 'POST') {
       const p = await request.json();
       await env.DB.prepare(
-        "INSERT INTO pedidos (cliente, fact_ruc, fact_razon, items, total, estado, mesero, metodo_pago, fecha_hora) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ).bind(p.cliente, p.fact_ruc, p.fact_razon, p.items, p.total, p.estado, p.mesero, p.metodo_pago, p.fecha_hora).run();
+        "INSERT INTO pedidos (cliente, fact_ruc, fact_razon, fact_phone, fact_email, items, total, estado, mesero, metodo_pago, fecha_hora) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).bind(p.cliente, p.fact_ruc, p.fact_razon, p.fact_phone, p.fact_email, p.items, p.total, p.estado, p.mesero, p.metodo_pago, p.fecha_hora).run();
+      return new Response(JSON.stringify({ success: true }), { headers });
+    }
+
+    // --- CATEGORIAS / SECCIONES ---
+    if (path === 'categorias' && request.method === 'GET') {
+      const { results } = await env.DB.prepare("SELECT * FROM categorias").all();
+      return new Response(JSON.stringify(results || []), { headers });
+    }
+
+    if (path === 'categorias' && request.method === 'POST') {
+      const data = await request.json();
+      await env.DB.prepare("INSERT INTO categorias (nombre) VALUES (?)").bind(data.nombre).run();
+      return new Response(JSON.stringify({ success: true }), { headers });
+    }
+
+    // --- SALSAS ---
+    if (path === 'salsas' && request.method === 'GET') {
+      const { results } = await env.DB.prepare("SELECT * FROM salsas").all();
+      return new Response(JSON.stringify(results || []), { headers });
+    }
+
+    if (path === 'salsas' && request.method === 'POST') {
+      const data = await request.json();
+      await env.DB.prepare("INSERT INTO salsas (nombre) VALUES (?)").bind(data.nombre).run();
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
