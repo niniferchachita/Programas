@@ -365,25 +365,65 @@
             if (viewId === "Admin") renderAdminConfig();
         }
 
-        // --- FUNCIONES API CONECTADAS A CLOUDFLARE D1 ---
+        // --- MANEJO DE CATEGORÍAS Y DESPLEGABLES ---
+        async function renderCategoriesList() {
+            const list = document.getElementById("catList");
+            const catSelect = document.getElementById("newProdCategory");
+            const filterSelect = document.getElementById("filterCategory");
+
+            try {
+                const res = await fetch('/api/categorias');
+                const cats = await res.json();
+                
+                if (list) {
+                    list.innerHTML = cats.map(c => `
+                        <li class="py-2 flex justify-between items-center">
+                            <span>${c.nombre}</span>
+                        </li>
+                    `).join("");
+                }
+
+                if (catSelect) {
+                    let optionsHtml = "";
+                    if (cats && cats.length > 0) {
+                        optionsHtml = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+                    } else {
+                        optionsHtml = `<option value="General">General</option>`;
+                    }
+                    catSelect.innerHTML = optionsHtml;
+                }
+
+                if (filterSelect) {
+                    let filterHtml = `<option value="Todas">Todas</option>`;
+                    if (cats && cats.length > 0) {
+                        filterHtml += cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+                    }
+                    filterSelect.innerHTML = filterHtml;
+                }
+
+            } catch(e){}
+        }
+
+        async function addCategory() {
+            const name = document.getElementById("newCatName").value.trim();
+            if(!name) return alert("Escribe el nombre de la nueva sección.");
+
+            await fetch('/api/categorias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: name })
+            });
+
+            document.getElementById("newCatName").value = "";
+            await renderCategoriesList();
+        }
+
+        // --- CATALOGO Y PRODUCTOS ---
         async function renderCatalog() {
             const catSelect = document.getElementById("filterCategory");
             const catalogGrid = document.getElementById("catalogGrid");
 
-            try {
-                const resCat = await fetch('/api/categorias');
-                const cats = await resCat.json();
-                const currentVal = catSelect.value;
-                
-                let optionsHtml = `<option value="Todas">Todas</option>`;
-                if (cats && cats.length > 0) {
-                    optionsHtml += cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
-                } else {
-                    optionsHtml += `<option value="General">General</option>`;
-                }
-                catSelect.innerHTML = optionsHtml;
-                if(currentVal) catSelect.value = currentVal;
-            } catch(e){}
+            await renderCategoriesList();
 
             try {
                 const resProd = await fetch('/api/productos');
@@ -676,32 +716,18 @@
             doc.save(`Reporte_Contadora_${dateVal || 'General'}.pdf`);
         }
 
-        function renderAdminConfig() {
+        async function renderAdminConfig() {
             renderUsersTable();
-            renderCategoriesList();
+            await renderCategoriesList();
             renderSaucesList();
-            renderProductsTable();
+            await renderProductsTable();
         }
 
         // --- GESTIÓN DE PRODUCTOS ---
         async function renderProductsTable() {
             const table = document.getElementById("productsTableBody");
-            const catSelect = document.getElementById("newProdCategory");
 
-            try {
-                const resCat = await fetch('/api/categorias');
-                const cats = await resCat.json();
-
-                let optionsHtml = "";
-                if (cats && cats.length > 0) {
-                    optionsHtml = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
-                } else {
-                    optionsHtml = `<option value="General">General</option>`;
-                }
-                catSelect.innerHTML = optionsHtml;
-            } catch(e){
-                catSelect.innerHTML = `<option value="General">General</option>`;
-            }
+            await renderCategoriesList();
 
             try {
                 const resProd = await fetch('/api/productos');
@@ -758,7 +784,7 @@
             renderProductsTable();
         }
 
-        // --- GESTIÓN DE USUARIOS Y CATEGORÍAS ---
+        // --- GESTIÓN DE USUARIOS Y SALSAS ---
         function renderUsersTable() {
             const table = document.getElementById("usersTableBody");
             table.innerHTML = usuarios.map(u => `
@@ -790,34 +816,6 @@
             if(username === "admin") return alert("No se puede eliminar el usuario principal admin.");
             usuarios = usuarios.filter(u => u.usuario !== username);
             renderUsersTable();
-        }
-
-        async function renderCategoriesList() {
-            const list = document.getElementById("catList");
-            try {
-                const res = await fetch('/api/categorias');
-                const cats = await res.json();
-                list.innerHTML = cats.map(c => `
-                    <li class="py-2 flex justify-between items-center">
-                        <span>${c.nombre}</span>
-                    </li>
-                `).join("");
-            } catch(e){}
-        }
-
-        async function addCategory() {
-            const name = document.getElementById("newCatName").value.trim();
-            if(!name) return alert("Escribe el nombre de la nueva sección.");
-
-            await fetch('/api/categorias', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre: name })
-            });
-
-            document.getElementById("newCatName").value = "";
-            await renderCategoriesList();
-            await renderProductsTable();
         }
 
         async function renderSaucesList() {
