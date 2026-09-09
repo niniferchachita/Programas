@@ -1,1 +1,998 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ FastFood POS Pro Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librerías jsPDF y AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+        .btn-primary { background-color: #10b981; color: white; font-weight: bold; }
+        .btn-primary:hover { background-color: #059669; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
 
+    <!-- HEADER -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-emerald-400">⚡ FastFood POS Pro</h1>
+        <div id="userInfo" class="flex items-center gap-4 hidden">
+            <span id="userBadge" class="text-sm font-semibold bg-slate-700 px-3 py-1 rounded-full"></span>
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="flex-1 flex items-center justify-center p-4">
+        <div class="card p-8 w-full max-w-md shadow-xl text-center">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-1">⚡ FastFood POS</h2>
+            <p class="text-slate-400 text-sm mb-6">Inicio de Sesión Centralizado</p>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="text" id="loginUser" placeholder="Usuario" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" required>
+                <input type="password" id="loginPass" placeholder="Contraseña" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" required>
+                <button type="submit" class="w-full btn-primary p-3 rounded-lg">INGRESAR AL SISTEMA</button>
+            </form>
+            <p class="text-xs text-slate-500 mt-4">Demo: admin/admin, mesero1/1234, multi1/1234</p>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="appScreen" class="flex-1 flex flex-col md:flex-row overflow-hidden hidden">
+        
+        <!-- SIDEBAR -->
+        <nav id="sidebar" class="w-full md:w-64 bg-slate-800 p-4 border-r border-slate-700 flex md:flex-col gap-2 overflow-x-auto">
+        </nav>
+
+        <!-- MAIN -->
+        <main class="flex-1 p-6 overflow-y-auto">
+
+            <!-- VISTA: TOMAR PEDIDO -->
+            <section id="viewPedido" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="flex items-center gap-4 bg-slate-800 p-4 rounded-xl">
+                            <label class="font-bold text-sm">📁 Sección:</label>
+                            <select id="filterCategory" onchange="renderCatalog()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"></select>
+                        </div>
+                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+                    </div>
+
+                    <!-- CARRITO & FACTURA -->
+                    <div class="card p-4 flex flex-col h-[700px]">
+                        <h3 class="font-bold text-lg mb-2">Orden del Cliente</h3>
+                        <input type="text" id="orderClient" placeholder="Cliente / Mesa" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm mb-2">
+                        
+                        <!-- DATOS OPCIONALES DE FACTURA -->
+                        <div class="bg-slate-900 p-3 rounded-lg mb-2 space-y-2">
+                            <span class="text-xs font-bold text-emerald-400 block">📄 Datos de Facturación (Opcional)</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="factRuc" placeholder="RUC / Cédula" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                <input type="text" id="factRazon" placeholder="Razón Social / Nombre" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="factPhone" placeholder="Teléfono" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                <input type="email" id="factEmail" placeholder="Correo Electrónico" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                            </div>
+                        </div>
+
+                        <!-- ITEM ESPECIAL LIBRE -->
+                        <div class="bg-slate-900 p-2.5 rounded-lg mb-2">
+                            <span class="text-xs font-bold text-purple-400 block mb-1">✨ Pedido Especial / Libre</span>
+                            <div class="flex gap-2 mb-1">
+                                <input type="text" id="customItemDesc" placeholder="Descripción" class="w-2/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                <input type="number" id="customItemPrice" placeholder="Precio ($)" class="w-1/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold p-1 rounded">Agregar Especial</button>
+                        </div>
+
+                        <!-- ITEMS EN CARRITO -->
+                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 mb-2 pr-1"></div>
+
+                        <div class="border-t border-slate-700 pt-2 mt-auto">
+                            <div class="flex justify-between items-center text-lg font-bold text-emerald-400 mb-2">
+                                <span>TOTAL:</span>
+                                <span id="cartTotal">$0.00</span>
+                            </div>
+                            <button onclick="submitOrder()" class="w-full btn-primary p-2.5 rounded-lg">🚀 REGISTRAR PEDIDO</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA: CAJA -->
+            <section id="viewCaja" class="hidden space-y-4">
+                <h2 class="text-2xl font-bold text-sky-400">💰 Panel de Cobros y Caja</h2>
+                <div id="pendingOrders" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </section>
+
+            <!-- VISTA: COCINA -->
+            <section id="viewCocina" class="hidden space-y-4">
+                <h2 class="text-2xl font-bold text-orange-400">🔥 Monitor de Cocina</h2>
+                <div id="kitchenOrders" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </section>
+
+            <!-- VISTA: REPORTES -->
+            <section id="viewReportes" class="hidden space-y-6">
+                <div class="flex justify-between items-center flex-wrap gap-4">
+                    <h2 class="text-2xl font-bold text-emerald-400">📊 Reportes y Facturación</h2>
+                    <button onclick="generarFacturaCompletaContadoraPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg">
+                        📄 Descargar Reporte PDF para Contadora
+                    </button>
+                </div>
+                
+                <div class="card p-4 flex flex-wrap gap-4 items-center">
+                    <label class="font-bold text-sm">📅 Filtrar por Fecha:</label>
+                    <input type="date" id="reportDate" onchange="renderReports()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card p-6 border-emerald-500 text-center">
+                        <span class="text-slate-400 text-sm">Total Ventas Cobradas</span>
+                        <div id="kpiTotal" class="text-3xl font-bold text-emerald-400 mt-2">$0.00</div>
+                    </div>
+                    <div class="card p-6 border-sky-500 text-center">
+                        <span class="text-slate-400 text-sm">Cantidad de Pedidos</span>
+                        <div id="kpiCount" class="text-3xl font-bold text-sky-400 mt-2">0</div>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="font-bold mb-3 text-sky-400">💳 Desglose por Formas de Pago</h3>
+                    <div id="paymentBreakdown" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="font-bold mb-3">📋 Historial de Ventas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-700 text-slate-300">
+                                <tr>
+                                    <th class="p-2">ID</th>
+                                    <th class="p-2">Fecha/Hora</th>
+                                    <th class="p-2">Usuario</th>
+                                    <th class="p-2">Cliente / Razón Social</th>
+                                    <th class="p-2">RUC / Cédula</th>
+                                    <th class="p-2">Teléfono</th>
+                                    <th class="p-2">Correo</th>
+                                    <th class="p-2 w-1/4">Detalle</th>
+                                    <th class="p-2">Método Pago</th>
+                                    <th class="p-2">Total</th>
+                                    <th class="p-2">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody" class="divide-y divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA: ADMIN CONFIGURACIÓN -->
+            <section id="viewAdmin" class="hidden space-y-6">
+                <h2 class="text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
+
+                <!-- SECCIÓN DE RESPALDOS (COLOCADA AL INICIO) -->
+                <div class="card p-6 border-l-4 border-sky-500 space-y-3">
+                    <h3 class="font-bold text-lg text-sky-400">💾 Respaldos de Inventario y Secciones</h3>
+                    <p class="text-xs text-slate-400">Exporta o importa el catálogo de productos, fotos y secciones para crear copias de seguridad o transferirlos a otro equipo.</p>
+                    <div class="flex flex-wrap gap-4 items-center pt-2">
+                        <button onclick="exportarInventarioJSON()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                            📤 Exportar Inventario (Backup JSON)
+                        </button>
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2">
+                            <label class="text-xs font-bold text-slate-300">📥 Importar Respaldo:</label>
+                            <input type="file" id="importFile" accept=".json" class="text-xs text-slate-300">
+                            <button onclick="importarInventarioJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded font-bold text-xs">Cargar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GESTIÓN DE PRODUCTOS POR SECCIÓN CON IMAGEN -->
+                <div class="card p-6 space-y-4 border-l-4 border-emerald-500">
+                    <h3 class="font-bold text-lg text-emerald-400">🍔 Gestión de Productos por Sección</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                        <input type="text" id="newProdName" placeholder="Nombre del Producto" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                        <input type="number" step="0.01" id="newProdPrice" placeholder="Precio ($)" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                        <select id="newProdCategory" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white"></select>
+                        <input type="file" id="newProdImage" accept="image/*" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-300">
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                            <input type="checkbox" id="newProdSauce" class="rounded border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                            <label for="newProdSauce" class="text-xs text-slate-300">¿Salsa / Término?</label>
+                        </div>
+                    </div>
+                    <button onclick="addProduct()" class="btn-primary px-4 py-2 rounded text-sm w-full md:w-auto">➕ Guardar Producto</button>
+
+                    <div class="overflow-x-auto mt-4">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-700 text-slate-300">
+                                <tr>
+                                    <th class="p-2">Imagen</th>
+                                    <th class="p-2">Producto</th>
+                                    <th class="p-2">Precio</th>
+                                    <th class="p-2">Sección / Categoría</th>
+                                    <th class="p-2">Salsa Req.</th>
+                                    <th class="p-2">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody" class="divide-y divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- GESTIÓN DE USUARIOS -->
+                <div class="card p-6 space-y-4">
+                    <h3 class="font-bold text-lg text-emerald-400">👥 Gestión de Usuarios y Personal</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input type="text" id="newFullName" placeholder="Nombre Completo" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                        <input type="text" id="newUsername" placeholder="Usuario (Login)" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                        <input type="password" id="newPassword" placeholder="Contraseña" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                        <select id="newRole" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                            <option value="mesero">Mesero</option>
+                            <option value="cocina">Cocina</option>
+                            <option value="caja">Caja</option>
+                            <option value="multitarea">Multitarea</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    <button onclick="addUser()" class="btn-primary px-4 py-2 rounded text-sm w-full md:w-auto">➕ Guardar Usuario</button>
+
+                    <div class="overflow-x-auto mt-4">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-700 text-slate-300">
+                                <tr>
+                                    <th class="p-2">Nombre</th>
+                                    <th class="p-2">Usuario</th>
+                                    <th class="p-2">Rol / Cargo</th>
+                                    <th class="p-2">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECCIONES Y SALSAS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card p-4 space-y-3">
+                        <h3 class="font-bold">📁 Secciones / Categorías</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="newCatName" placeholder="Nueva Sección" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                            <button onclick="addCategory()" class="btn-primary px-4 py-2 rounded text-sm">Crear</button>
+                        </div>
+                        <ul id="catList" class="divide-y divide-slate-700 text-sm"></ul>
+                    </div>
+
+                    <div class="card p-4 space-y-3">
+                        <h3 class="font-bold">🥫 Salsas y Términos</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="newSauceName" placeholder="Ej: BBQ, Picante, Bien Cocido" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                            <button onclick="addSauce()" class="btn-primary px-4 py-2 rounded text-sm">Crear</button>
+                        </div>
+                        <ul id="sauceList" class="divide-y divide-slate-700 text-sm"></ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL SALSA -->
+    <div id="sauceModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden">
+        <div class="card p-6 w-full max-w-md space-y-4">
+            <h3 id="modalTitle" class="font-bold text-lg text-sky-400"></h3>
+            <div>
+                <label class="text-xs font-bold text-slate-400 block mb-1">Selecciona Salsa o Término:</label>
+                <select id="modalSauceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-400 block mb-1">Nota adicional (Opcional):</label>
+                <input type="text" id="modalNoteInput" placeholder="Ej: Bien crujiente" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeSauceModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-sm font-bold">Cancelar</button>
+                <button onclick="confirmSauceModal()" class="btn-primary px-4 py-2 rounded text-sm">Agregar al Carrito</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db;
+        const request = indexedDB.open("FastFoodPOS", 6);
+
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains("usuarios")) db.createObjectStore("usuarios", { keyPath: "usuario" });
+            if (!db.objectStoreNames.contains("categorias")) db.createObjectStore("categorias", { keyPath: "id", autoIncrement: true });
+            if (!db.objectStoreNames.contains("salsas")) db.createObjectStore("salsas", { keyPath: "id", autoIncrement: true });
+            if (!db.objectStoreNames.contains("productos")) db.createObjectStore("productos", { keyPath: "id", autoIncrement: true });
+            if (!db.objectStoreNames.contains("pedidos")) db.createObjectStore("pedidos", { keyPath: "id", autoIncrement: true });
+        };
+
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            seedInitialData();
+        };
+
+        function seedInitialData() {
+            const tx = db.transaction(["usuarios", "categorias", "salsas", "productos"], "readwrite");
+            const storeUsers = tx.objectStore("usuarios");
+            storeUsers.count().onsuccess = (e) => {
+                if(e.target.result === 0) {
+                    storeUsers.add({ usuario: "admin", clave: "admin", nombre: "Administrador", rol: "admin" });
+                    storeUsers.add({ usuario: "mesero1", clave: "1234", nombre: "Carlos Gómez", rol: "mesero" });
+                    storeUsers.add({ usuario: "multi1", clave: "1234", nombre: "Juan Multitarea", rol: "multitarea" });
+                    
+                    const storeCat = tx.objectStore("categorias");
+                    storeCat.add({ nombre: "Alitas & Entradas" });
+                    storeCat.add({ nombre: "Porciones & Acompañantes" });
+
+                    const storeSauce = tx.objectStore("salsas");
+                    storeSauce.add({ nombre: "BBQ" });
+                    storeSauce.add({ nombre: "Picante" });
+                    storeSauce.add({ nombre: "Sin Salsa" });
+
+                    const storeProd = tx.objectStore("productos");
+                    storeProd.add({ nombre: "Porción de Alitas (6u)", precio: 5.50, categoria: "Alitas & Entradas", requiere_salsa: true, imagen: "" });
+                    storeProd.add({ nombre: "Porción de Papas", precio: 1.50, categoria: "Porciones & Acompañantes", requiere_salsa: false, imagen: "" });
+                }
+            }
+        }
+
+        let currentUser = null;
+        let cart = [];
+        let currentModalItem = null;
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById("loginUser").value.trim();
+            const p = document.getElementById("loginPass").value.trim();
+
+            const tx = db.transaction("usuarios", "readonly");
+            const req = tx.objectStore("usuarios").get(u);
+
+            req.onsuccess = () => {
+                const user = req.result;
+                if(user && user.clave === p) {
+                    currentUser = user;
+                    document.getElementById("loginScreen").classList.add("hidden");
+                    document.getElementById("appScreen").classList.remove("hidden");
+                    document.getElementById("userInfo").classList.remove("hidden");
+                    document.getElementById("userBadge").innerText = `${user.nombre} (${user.rol.toUpperCase()})`;
+                    setupNavigation();
+                } else {
+                    alert("Usuario o contraseña incorrectos");
+                }
+            };
+        }
+
+        function logout() {
+            currentUser = null;
+            cart = [];
+            document.getElementById("appScreen").classList.add("hidden");
+            document.getElementById("userInfo").classList.add("hidden");
+            document.getElementById("loginScreen").classList.remove("hidden");
+        }
+
+        function setupNavigation() {
+            const nav = document.getElementById("sidebar");
+            nav.innerHTML = "";
+
+            const views = {
+                "mesero": [{ id: "Pedido", name: "📝 Tomar Pedido" }],
+                "cocina": [{ id: "Cocina", name: "🔥 Cocina" }],
+                "caja": [{ id: "Caja", name: "💰 Caja y Cobros" }],
+                "multitarea": [
+                    { id: "Pedido", name: "📝 Tomar Pedido" },
+                    { id: "Caja", name: "💰 Caja y Cobros" },
+                    { id: "Cocina", name: "🔥 Cocina" },
+                    { id: "Reportes", name: "📋 Lista de Ventas / Reportes" }
+                ],
+                "admin": [
+                    { id: "Pedido", name: "📝 Tomar Pedido" },
+                    { id: "Caja", name: "💰 Caja y Cobros" },
+                    { id: "Cocina", name: "🔥 Cocina" },
+                    { id: "Reportes", name: "📊 Reportes & Facturas" },
+                    { id: "Admin", name: "⚙️ Configuración" }
+                ]
+            };
+
+            const allowed = views[currentUser.rol] || views["mesero"];
+            allowed.forEach((v, index) => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left p-3 rounded-lg font-bold bg-slate-700 hover:bg-slate-600 transition mb-1 text-sm";
+                btn.innerText = v.name;
+                btn.onclick = () => switchView(v.id);
+                nav.appendChild(btn);
+                if (index === 0) switchView(v.id);
+            });
+        }
+
+        function switchView(viewId) {
+            ["Pedido", "Caja", "Cocina", "Reportes", "Admin"].forEach(v => {
+                document.getElementById(`view${v}`).classList.add("hidden");
+            });
+            document.getElementById(`view${viewId}`).classList.remove("hidden");
+
+            if (viewId === "Pedido") renderCatalog();
+            if (viewId === "Caja") renderCaja();
+            if (viewId === "Cocina") renderCocina();
+            if (viewId === "Reportes") renderReports();
+            if (viewId === "Admin") renderAdminConfig();
+        }
+
+        function renderCatalog() {
+            const catSelect = document.getElementById("filterCategory");
+            const catalogGrid = document.getElementById("catalogGrid");
+
+            const txCat = db.transaction("categorias", "readonly");
+            txCat.objectStore("categorias").getAll().onsuccess = (e) => {
+                const cats = e.target.result;
+                const currentVal = catSelect.value;
+                catSelect.innerHTML = `<option value="Todas">Todas</option>` + cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+                if(currentVal) catSelect.value = currentVal;
+            };
+
+            const txProd = db.transaction("productos", "readonly");
+            txProd.objectStore("productos").getAll().onsuccess = (e) => {
+                let prods = e.target.result;
+                if(catSelect.value && catSelect.value !== "Todas") {
+                    prods = prods.filter(p => p.categoria === catSelect.value);
+                }
+                catalogGrid.innerHTML = prods.map(p => `
+                    <div class="card p-3 flex flex-col justify-between items-center text-center">
+                        ${p.imagen ? `<img src="${p.imagen}" class="w-full h-24 object-cover rounded-lg mb-2 border border-slate-700">` : `<div class="w-full h-24 bg-slate-800 rounded-lg flex items-center justify-center text-2xl mb-2 text-slate-600">🍔</div>`}
+                        <div class="font-bold text-sm mb-1">${p.nombre}</div>
+                        <div class="text-emerald-400 font-bold mb-2">$${p.precio.toFixed(2)}</div>
+                        <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1 px-2 rounded text-xs">Agregar +</button>
+                    </div>
+                `).join("");
+            };
+        }
+
+        function handleAddToCart(id, nombre, precio, requiereSalsa) {
+            if (requiereSalsa) {
+                currentModalItem = { id, nombre, precio };
+                document.getElementById("modalTitle").innerText = `Opciones para: ${nombre}`;
+                
+                const tx = db.transaction("salsas", "readonly");
+                tx.objectStore("salsas").getAll().onsuccess = (e) => {
+                    const salsas = e.target.result;
+                    document.getElementById("modalSauceSelect").innerHTML = salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
+                    document.getElementById("sauceModal").classList.remove("hidden");
+                };
+            } else {
+                cart.push({ nombre, precio });
+                renderCart();
+            }
+        }
+
+        function closeSauceModal() {
+            document.getElementById("sauceModal").classList.add("hidden");
+        }
+
+        function confirmSauceModal() {
+            const sauce = document.getElementById("modalSauceSelect").value;
+            const note = document.getElementById("modalNoteInput").value.trim();
+            let name = `${currentModalItem.nombre} [${sauce}]`;
+            if (note) name += ` (${note})`;
+            
+            cart.push({ nombre: name, precio: currentModalItem.precio });
+            document.getElementById("modalNoteInput").value = "";
+            closeSauceModal();
+            renderCart();
+        }
+
+        function addCustomItem() {
+            const desc = document.getElementById("customItemDesc").value.trim();
+            const price = parseFloat(document.getElementById("customItemPrice").value);
+            if (desc && !isNaN(price) && price > 0) {
+                cart.push({ nombre: `⭐ ${desc}`, precio: price });
+                document.getElementById("customItemDesc").value = "";
+                document.getElementById("customItemPrice").value = "";
+                renderCart();
+            }
+        }
+
+        function renderCart() {
+            const container = document.getElementById("cartItems");
+            let total = 0;
+            container.innerHTML = cart.map((item, idx) => {
+                total += item.precio;
+                return `
+                    <div class="flex justify-between items-center bg-slate-900 p-2 rounded text-xs">
+                        <span class="font-medium">${item.nombre}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">$${item.precio.toFixed(2)}</span>
+                            <button onclick="cart.splice(${idx}, 1); renderCart();" class="text-red-400 hover:text-red-300 font-bold">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+            document.getElementById("cartTotal").innerText = `$${total.toFixed(2)}`;
+        }
+
+        function submitOrder() {
+            const client = document.getElementById("orderClient").value.trim();
+            if (!client) return alert("Ingresa el nombre del cliente o mesa.");
+            if (cart.length === 0) return alert("El carrito está vacío.");
+
+            const ruc = document.getElementById("factRuc").value.trim();
+            const razon = document.getElementById("factRazon").value.trim();
+            const phone = document.getElementById("factPhone").value.trim();
+            const email = document.getElementById("factEmail").value.trim();
+
+            const total = cart.reduce((acc, i) => acc + i.precio, 0);
+            const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+            const tx = db.transaction("pedidos", "readwrite");
+            tx.objectStore("pedidos").add({
+                cliente: client,
+                fact_ruc: ruc || "Consumidor Final",
+                fact_razon: razon || client,
+                fact_phone: phone || "N/A",
+                fact_email: email || "N/A",
+                items: JSON.stringify(cart),
+                total: total,
+                estado: "pendiente",
+                mesero: currentUser.nombre,
+                metodo_pago: "Efectivo",
+                fecha_hora: now
+            });
+
+            tx.oncomplete = () => {
+                cart = [];
+                document.getElementById("orderClient").value = "";
+                document.getElementById("factRuc").value = "";
+                document.getElementById("factRazon").value = "";
+                document.getElementById("factPhone").value = "";
+                document.getElementById("factEmail").value = "";
+                renderCart();
+                alert("¡Pedido registrado exitosamente!");
+            };
+        }
+
+        function renderCaja() {
+            const container = document.getElementById("pendingOrders");
+            const tx = db.transaction("pedidos", "readonly");
+            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
+                const pending = e.target.result.filter(p => p.estado !== "cobrado" && p.estado !== "anulado");
+                container.innerHTML = pending.map(p => `
+                    <div class="card p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-sky-400">Orden #${p.id} - ${p.cliente}</span>
+                            <span class="text-xs text-slate-400">Mesero: ${p.mesero}</span>
+                        </div>
+                        <div class="text-xs text-slate-400 bg-slate-900 p-2 rounded space-y-0.5">
+                            <div>Razón Social: <span class="text-white font-medium">${p.fact_razon || p.cliente}</span></div>
+                            <div>RUC/CI: <span class="text-white font-medium">${p.fact_ruc || 'N/A'}</span></div>
+                            <div>Telf: <span class="text-white font-medium">${p.fact_phone || 'N/A'}</span></div>
+                            <div>Email: <span class="text-white font-medium">${p.fact_email || 'N/A'}</span></div>
+                        </div>
+                        <div class="text-2xl font-bold text-emerald-400">$${p.total.toFixed(2)}</div>
+                        <select id="payMethod_${p.id}" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transf. Banco de Loja">Transf. Banco de Loja</option>
+                            <option value="Transf. Banco Pichincha">Transf. Banco Pichincha</option>
+                        </select>
+                        <button onclick="processPayment(${p.id})" class="w-full btn-primary py-2 rounded text-sm">💵 COBRAR</button>
+                    </div>
+                `).join("");
+            };
+        }
+
+        function processPayment(orderId) {
+            const method = document.getElementById(`payMethod_${orderId}`).value;
+            const tx = db.transaction("pedidos", "readwrite");
+            const store = tx.objectStore("pedidos");
+            store.get(orderId).onsuccess = (e) => {
+                const order = e.target.result;
+                order.estado = "cobrado";
+                order.metodo_pago = method;
+                store.put(order);
+                tx.oncomplete = () => renderCaja();
+            };
+        }
+
+        function renderCocina() {
+            const container = document.getElementById("kitchenOrders");
+            const tx = db.transaction("pedidos", "readonly");
+            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
+                const pending = e.target.result.filter(p => p.estado === "pendiente");
+                container.innerHTML = pending.map(p => {
+                    const items = JSON.parse(p.items);
+                    return `
+                        <div class="card p-4 border-orange-500 space-y-3">
+                            <div class="font-bold text-orange-400">Orden #${p.id} - ${p.cliente}</div>
+                            <ul class="text-sm space-y-1 bg-slate-900 p-2 rounded">
+                                ${items.map(i => `<li>• ${i.nombre}</li>`).join("")}
+                            </ul>
+                            <button onclick="markKitchenReady(${p.id})" class="w-full bg-orange-500 hover:bg-orange-600 font-bold py-2 rounded text-sm">✔ MARCAR LISTO</button>
+                        </div>
+                    `;
+                }).join("");
+            };
+        }
+
+        function markKitchenReady(orderId) {
+            const tx = db.transaction("pedidos", "readwrite");
+            const store = tx.objectStore("pedidos");
+            store.get(orderId).onsuccess = (e) => {
+                const order = e.target.result;
+                order.estado = "listo";
+                store.put(order);
+                tx.oncomplete = () => renderCocina();
+            };
+        }
+
+        function renderReports() {
+            const dateVal = document.getElementById("reportDate").value;
+            const tx = db.transaction("pedidos", "readonly");
+            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
+                let orders = e.target.result;
+                if(dateVal) orders = orders.filter(p => p.fecha_hora.startsWith(dateVal));
+
+                const cobrados = orders.filter(p => p.estado === "cobrado");
+                const totalVentas = cobrados.reduce((acc, p) => acc + p.total, 0);
+
+                document.getElementById("kpiTotal").innerText = `$${totalVentas.toFixed(2)}`;
+                document.getElementById("kpiCount").innerText = cobrados.length;
+
+                const methods = {};
+                cobrados.forEach(p => {
+                    methods[p.metodo_pago] = (methods[p.metodo_pago] || 0) + p.total;
+                });
+
+                document.getElementById("paymentBreakdown").innerHTML = Object.keys(methods).length ? Object.entries(methods).map(([method, amt]) => `
+                    <div class="bg-slate-900 p-3 rounded-lg text-center border border-slate-700">
+                        <span class="text-xs text-slate-400 block mb-1">${method}</span>
+                        <span class="text-lg font-bold text-emerald-400">$${amt.toFixed(2)}</span>
+                    </div>
+                `).join("") : `<div class="text-slate-500 text-sm">Sin ventas registradas</div>`;
+
+                document.getElementById("reportTableBody").innerHTML = orders.map(p => {
+                    const items = JSON.parse(p.items).map(i => i.nombre).join(", ");
+                    return `
+                        <tr>
+                            <td class="p-2">#${p.id}</td>
+                            <td class="p-2 text-xs">${p.fecha_hora}</td>
+                            <td class="p-2">${p.mesero}</td>
+                            <td class="p-2">${p.fact_razon || p.cliente}</td>
+                            <td class="p-2">${p.fact_ruc || 'N/A'}</td>
+                            <td class="p-2">${p.fact_phone || 'N/A'}</td>
+                            <td class="p-2">${p.fact_email || 'N/A'}</td>
+                            <td class="p-2 text-xs">${items}</td>
+                            <td class="p-2">${p.metodo_pago}</td>
+                            <td class="p-2 font-bold text-emerald-400">$${p.total.toFixed(2)}</td>
+                            <td class="p-2"><span class="px-2 py-1 text-xs rounded font-bold ${p.estado === 'cobrado' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">${p.estado}</span></td>
+                        </tr>
+                    `;
+                }).join("");
+            };
+        }
+
+        function generarFacturaCompletaContadoraPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+            const dateVal = document.getElementById("reportDate").value;
+
+            const tx = db.transaction("pedidos", "readonly");
+            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
+                let orders = e.target.result;
+                if(dateVal) orders = orders.filter(p => p.fecha_hora.startsWith(dateVal));
+
+                const cobrados = orders.filter(p => p.estado === "cobrado");
+                if (cobrados.length === 0) return alert("No existen ventas cobradas para generar el reporte.");
+
+                doc.setFontSize(18);
+                doc.setTextColor(16, 185, 129);
+                doc.text("⚡ FastFood POS Pro - Reporte Contable de Ventas", 14, 15);
+
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                const fechaTexto = dateVal ? `Fecha filtrada: ${dateVal}` : "Todas las fechas";
+                doc.text(`${fechaTexto} | Generado el: ${new Date().toLocaleString()}`, 14, 22);
+
+                let totalVentas = 0;
+                const rows = cobrados.map(p => {
+                    totalVentas += p.total;
+                    const itemsText = JSON.parse(p.items).map(i => i.nombre).join(", ");
+                    return [
+                        `#${p.id}`, p.fecha_hora, p.fact_razon || p.cliente,
+                        p.fact_ruc || 'Consumidor Final', p.fact_phone || 'N/A',
+                        p.fact_email || 'N/A', itemsText, p.metodo_pago, `$${p.total.toFixed(2)}`
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: 28,
+                    head: [['ID', 'Fecha/Hora', 'Cliente / Razón Social', 'RUC / Cédula', 'Teléfono', 'Correo', 'Detalle Pedido', 'Forma Pago', 'Total']],
+                    body: rows,
+                    styles: { fontSize: 8, cellPadding: 2 },
+                    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [240, 243, 246] }
+                });
+
+                const finalY = doc.lastAutoTable.finalY + 10;
+                doc.setFontSize(12);
+                doc.setTextColor(0);
+                doc.text(`Total Registros: ${cobrados.length}`, 14, finalY);
+                doc.text(`Monto Total Cobrado: $${totalVentas.toFixed(2)}`, 14, finalY + 6);
+
+                doc.save(`Reporte_Contadora_${dateVal || 'General'}.pdf`);
+            };
+        }
+
+        // --- FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN DE INVENTARIO ---
+        function exportarInventarioJSON() {
+            const tx = db.transaction(["productos", "categorias", "salsas"], "readonly");
+            const backupData = {};
+
+            tx.objectStore("categorias").getAll().onsuccess = (e1) => {
+                backupData.categorias = e1.target.result;
+                tx.objectStore("salsas").getAll().onsuccess = (e2) => {
+                    backupData.salsas = e2.target.result;
+                    tx.objectStore("productos").getAll().onsuccess = (e3) => {
+                        backupData.productos = e3.target.result;
+
+                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                        const downloadAnchor = document.createElement('a');
+                        downloadAnchor.setAttribute("href", dataStr);
+                        downloadAnchor.setAttribute("download", `Respaldo_Inventario_POS_${new Date().toISOString().slice(0,10)}.json`);
+                        document.body.appendChild(downloadAnchor);
+                        downloadAnchor.click();
+                        downloadAnchor.remove();
+                    };
+                };
+            };
+        }
+
+        function importarInventarioJSON() {
+            const fileInput = document.getElementById("importFile");
+            const file = fileInput.files[0];
+            if (!file) return alert("Por favor, selecciona un archivo .json de respaldo.");
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.productos || !data.categorias) {
+                        return alert("El archivo no tiene la estructura correcta de inventario.");
+                    }
+
+                    if (!confirm("Esta acción reemplazará las categorías, salsas y productos actuales. ¿Deseas continuar?")) return;
+
+                    const tx = db.transaction(["productos", "categorias", "salsas"], "readwrite");
+                    
+                    // Limpiar datos actuales
+                    tx.objectStore("categorias").clear();
+                    tx.objectStore("salsas").clear();
+                    tx.objectStore("productos").clear();
+
+                    // Insertar nuevos datos
+                    data.categorias.forEach(c => tx.objectStore("categorias").add({ nombre: c.nombre }));
+                    if (data.salsas) data.salsas.forEach(s => tx.objectStore("salsas").add({ nombre: s.nombre }));
+                    data.productos.forEach(p => tx.objectStore("productos").add({
+                        nombre: p.nombre,
+                        precio: p.precio,
+                        categoria: p.categoria,
+                        requiere_salsa: p.requiere_salsa,
+                        imagen: p.imagen || ""
+                    }));
+
+                    tx.oncomplete = () => {
+                        alert("¡Inventario e Secciones importados exitosamente!");
+                        fileInput.value = "";
+                        renderAdminConfig();
+                    };
+
+                } catch (err) {
+                    alert("Ocurrió un error al leer el archivo JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderAdminConfig() {
+            renderUsersTable();
+            renderCategoriesList();
+            renderSaucesList();
+            renderProductsTable();
+        }
+
+        // --- GESTIÓN DE PRODUCTOS ---
+        function renderProductsTable() {
+            const table = document.getElementById("productsTableBody");
+            const catSelect = document.getElementById("newProdCategory");
+
+            const txCat = db.transaction("categorias", "readonly");
+            txCat.objectStore("categorias").getAll().onsuccess = (e) => {
+                const cats = e.target.result;
+                catSelect.innerHTML = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+            };
+
+            const txProd = db.transaction("productos", "readonly");
+            txProd.objectStore("productos").getAll().onsuccess = (e) => {
+                const prods = e.target.result;
+                table.innerHTML = prods.map(p => `
+                    <tr>
+                        <td class="p-2">
+                            ${p.imagen ? `<img src="${p.imagen}" class="w-10 h-10 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}
+                        </td>
+                        <td class="p-2 font-bold">${p.nombre}</td>
+                        <td class="p-2 text-emerald-400 font-bold">$${p.precio.toFixed(2)}</td>
+                        <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs">${p.categoria}</span></td>
+                        <td class="p-2">${p.requiere_salsa ? '✅ Sí' : '❌ No'}</td>
+                        <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
+                    </tr>
+                `).join("");
+            };
+        }
+
+        async function addProduct() {
+            const name = document.getElementById("newProdName").value.trim();
+            const price = parseFloat(document.getElementById("newProdPrice").value);
+            const category = document.getElementById("newProdCategory").value;
+            const requiresSauce = document.getElementById("newProdSauce").checked;
+            const imageFile = document.getElementById("newProdImage").files[0];
+
+            if(!name || isNaN(price) || price <= 0 || !category) {
+                return alert("Ingresa un nombre, un precio válido y asigna una categoría.");
+            }
+
+            let imageBase64 = "";
+            if (imageFile) {
+                imageBase64 = await convertFileToBase64(imageFile);
+            }
+
+            const tx = db.transaction("productos", "readwrite");
+            tx.objectStore("productos").add({
+                nombre: name,
+                precio: price,
+                categoria: category,
+                requiere_salsa: requiresSauce,
+                imagen: imageBase64
+            });
+
+            tx.oncomplete = () => {
+                document.getElementById("newProdName").value = "";
+                document.getElementById("newProdPrice").value = "";
+                document.getElementById("newProdSauce").checked = false;
+                document.getElementById("newProdImage").value = "";
+                renderProductsTable();
+            };
+        }
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function deleteProduct(id) {
+            if(!confirm("¿Eliminar este producto?")) return;
+            const tx = db.transaction("productos", "readwrite");
+            tx.objectStore("productos").delete(id);
+            tx.oncomplete = () => renderProductsTable();
+        }
+
+        // --- GESTIÓN DE USUARIOS ---
+        function renderUsersTable() {
+            const table = document.getElementById("usersTableBody");
+            const tx = db.transaction("usuarios", "readonly");
+            tx.objectStore("usuarios").getAll().onsuccess = (e) => {
+                const users = e.target.result;
+                table.innerHTML = users.map(u => `
+                    <tr>
+                        <td class="p-2">${u.nombre}</td>
+                        <td class="p-2">${u.usuario}</td>
+                        <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
+                        <td class="p-2"><button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
+                    </tr>
+                `).join("");
+            };
+        }
+
+        function addUser() {
+            const name = document.getElementById("newFullName").value.trim();
+            const username = document.getElementById("newUsername").value.trim();
+            const pass = document.getElementById("newPassword").value.trim();
+            const role = document.getElementById("newRole").value;
+
+            if(!name || !username || !pass) return alert("Completa todos los campos de usuario.");
+
+            const tx = db.transaction("usuarios", "readwrite");
+            tx.objectStore("usuarios").add({ usuario: username, clave: pass, nombre: name, rol: role });
+            tx.oncomplete = () => {
+                document.getElementById("newFullName").value = "";
+                document.getElementById("newUsername").value = "";
+                document.getElementById("newPassword").value = "";
+                renderUsersTable();
+            };
+        }
+
+        function deleteUser(username) {
+            if(username === "admin") return alert("No se puede eliminar el usuario principal admin.");
+            if(!confirm(`¿Eliminar usuario ${username}?`)) return;
+
+            const tx = db.transaction("usuarios", "readwrite");
+            tx.objectStore("usuarios").delete(username);
+            tx.oncomplete = () => renderUsersTable();
+        }
+
+        // --- GESTIÓN DE CATEGORÍAS ---
+        function renderCategoriesList() {
+            const list = document.getElementById("catList");
+            const tx = db.transaction("categorias", "readonly");
+            tx.objectStore("categorias").getAll().onsuccess = (e) => {
+                const cats = e.target.result;
+                list.innerHTML = cats.map(c => `
+                    <li class="py-2 flex justify-between items-center">
+                        <span>${c.nombre}</span>
+                        <button onclick="deleteCategory(${c.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button>
+                    </li>
+                `).join("");
+            };
+        }
+
+        function addCategory() {
+            const name = document.getElementById("newCatName").value.trim();
+            if(!name) return;
+            const tx = db.transaction("categorias", "readwrite");
+            tx.objectStore("categorias").add({ nombre: name });
+            tx.oncomplete = () => {
+                document.getElementById("newCatName").value = "";
+                renderCategoriesList();
+                renderProductsTable();
+            };
+        }
+
+        function deleteCategory(id) {
+            if(!confirm("¿Eliminar esta sección?")) return;
+            const tx = db.transaction("categorias", "readwrite");
+            tx.objectStore("categorias").delete(id);
+            tx.oncomplete = () => {
+                renderCategoriesList();
+                renderProductsTable();
+            };
+        }
+
+        // --- GESTIÓN DE SALSAS ---
+        function renderSaucesList() {
+            const list = document.getElementById("sauceList");
+            const tx = db.transaction("salsas", "readonly");
+            tx.objectStore("salsas").getAll().onsuccess = (e) => {
+                const sauces = e.target.result;
+                list.innerHTML = sauces.map(s => `
+                    <li class="py-2 flex justify-between items-center">
+                        <span>${s.nombre}</span>
+                        <button onclick="deleteSauce(${s.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button>
+                    </li>
+                `).join("");
+            };
+        }
+
+        function addSauce() {
+            const name = document.getElementById("newSauceName").value.trim();
+            if(!name) return;
+            const tx = db.transaction("salsas", "readwrite");
+            tx.objectStore("salsas").add({ nombre: name });
+            tx.oncomplete = () => {
+                document.getElementById("newSauceName").value = "";
+                renderSaucesList();
+            };
+        }
+
+        function deleteSauce(id) {
+            if(!confirm("¿Eliminar esta salsa o término?")) return;
+            const tx = db.transaction("salsas", "readwrite");
+            tx.objectStore("salsas").delete(id);
+            tx.oncomplete = () => renderSaucesList();
+        }
+    </script>
+</body>
+</html>
