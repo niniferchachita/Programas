@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ FastFood POS Pro Web</title>
+    <title>⚡ FastFood POS Pro Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Librerías jsPDF y AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -19,7 +19,7 @@
 
     <!-- HEADER -->
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-emerald-400">⚡ FastFood POS Pro</h1>
+        <h1 class="text-xl font-bold text-emerald-400">⚡ FastFood POS Pro Cloud</h1>
         <div id="userInfo" class="flex items-center gap-4 hidden">
             <span id="userBadge" class="text-sm font-semibold bg-slate-700 px-3 py-1 rounded-full"></span>
             <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Cerrar Sesión</button>
@@ -174,7 +174,7 @@
             <section id="viewAdmin" class="hidden space-y-6">
                 <h2 class="text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
 
-                <!-- SECCIÓN DE RESPALDOS (COLOCADA AL INICIO) -->
+                <!-- SECCIÓN DE RESPALDOS -->
                 <div class="card p-6 border-l-4 border-sky-500 space-y-3">
                     <h3 class="font-bold text-lg text-sky-400">💾 Respaldos de Inventario y Secciones</h3>
                     <p class="text-xs text-slate-400">Exporta o importa el catálogo de productos, fotos y secciones para crear copias de seguridad o transferirlos a otro equipo.</p>
@@ -298,73 +298,33 @@
     </div>
 
     <script>
-        let db;
-        const request = indexedDB.open("FastFoodPOS", 6);
-
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains("usuarios")) db.createObjectStore("usuarios", { keyPath: "usuario" });
-            if (!db.objectStoreNames.contains("categorias")) db.createObjectStore("categorias", { keyPath: "id", autoIncrement: true });
-            if (!db.objectStoreNames.contains("salsas")) db.createObjectStore("salsas", { keyPath: "id", autoIncrement: true });
-            if (!db.objectStoreNames.contains("productos")) db.createObjectStore("productos", { keyPath: "id", autoIncrement: true });
-            if (!db.objectStoreNames.contains("pedidos")) db.createObjectStore("pedidos", { keyPath: "id", autoIncrement: true });
-        };
-
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            seedInitialData();
-        };
-
-        function seedInitialData() {
-            const tx = db.transaction(["usuarios", "categorias", "salsas", "productos"], "readwrite");
-            const storeUsers = tx.objectStore("usuarios");
-            storeUsers.count().onsuccess = (e) => {
-                if(e.target.result === 0) {
-                    storeUsers.add({ usuario: "admin", clave: "admin", nombre: "Administrador", rol: "admin" });
-                    storeUsers.add({ usuario: "mesero1", clave: "1234", nombre: "Carlos Gómez", rol: "mesero" });
-                    storeUsers.add({ usuario: "multi1", clave: "1234", nombre: "Juan Multitarea", rol: "multitarea" });
-                    
-                    const storeCat = tx.objectStore("categorias");
-                    storeCat.add({ nombre: "Alitas & Entradas" });
-                    storeCat.add({ nombre: "Porciones & Acompañantes" });
-
-                    const storeSauce = tx.objectStore("salsas");
-                    storeSauce.add({ nombre: "BBQ" });
-                    storeSauce.add({ nombre: "Picante" });
-                    storeSauce.add({ nombre: "Sin Salsa" });
-
-                    const storeProd = tx.objectStore("productos");
-                    storeProd.add({ nombre: "Porción de Alitas (6u)", precio: 5.50, categoria: "Alitas & Entradas", requiere_salsa: true, imagen: "" });
-                    storeProd.add({ nombre: "Porción de Papas", precio: 1.50, categoria: "Porciones & Acompañantes", requiere_salsa: false, imagen: "" });
-                }
-            }
-        }
-
         let currentUser = null;
         let cart = [];
         let currentModalItem = null;
+
+        // Usuarios predeterminados del sistema
+        let usuarios = [
+            { usuario: "admin", clave: "admin", nombre: "Administrador", rol: "admin" },
+            { usuario: "mesero1", clave: "1234", nombre: "Carlos Gómez", rol: "mesero" },
+            { usuario: "multi1", clave: "1234", nombre: "Juan Multitarea", rol: "multitarea" }
+        ];
 
         function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById("loginUser").value.trim();
             const p = document.getElementById("loginPass").value.trim();
+            const user = usuarios.find(usr => usr.usuario === u && usr.clave === p);
 
-            const tx = db.transaction("usuarios", "readonly");
-            const req = tx.objectStore("usuarios").get(u);
-
-            req.onsuccess = () => {
-                const user = req.result;
-                if(user && user.clave === p) {
-                    currentUser = user;
-                    document.getElementById("loginScreen").classList.add("hidden");
-                    document.getElementById("appScreen").classList.remove("hidden");
-                    document.getElementById("userInfo").classList.remove("hidden");
-                    document.getElementById("userBadge").innerText = `${user.nombre} (${user.rol.toUpperCase()})`;
-                    setupNavigation();
-                } else {
-                    alert("Usuario o contraseña incorrectos");
-                }
-            };
+            if(user) {
+                currentUser = user;
+                document.getElementById("loginScreen").classList.add("hidden");
+                document.getElementById("appScreen").classList.remove("hidden");
+                document.getElementById("userInfo").classList.remove("hidden");
+                document.getElementById("userBadge").innerText = `${user.nombre} (${user.rol.toUpperCase()})`;
+                setupNavigation();
+            } else {
+                alert("Usuario o contraseña incorrectos");
+            }
         }
 
         function logout() {
@@ -422,46 +382,57 @@
             if (viewId === "Admin") renderAdminConfig();
         }
 
-        function renderCatalog() {
+        // --- CATALOGO Y PRODUCTOS CLOUDFLARE API ---
+        async function renderCatalog() {
             const catSelect = document.getElementById("filterCategory");
             const catalogGrid = document.getElementById("catalogGrid");
 
-            const txCat = db.transaction("categorias", "readonly");
-            txCat.objectStore("categorias").getAll().onsuccess = (e) => {
-                const cats = e.target.result;
+            // Cargar categorías
+            try {
+                const resCat = await fetch('/api/categorias');
+                const cats = await resCat.json();
                 const currentVal = catSelect.value;
                 catSelect.innerHTML = `<option value="Todas">Todas</option>` + cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
                 if(currentVal) catSelect.value = currentVal;
-            };
+            } catch(e){}
 
-            const txProd = db.transaction("productos", "readonly");
-            txProd.objectStore("productos").getAll().onsuccess = (e) => {
-                let prods = e.target.result;
+            // Cargar productos de la nube
+            try {
+                const resProd = await fetch('/api/productos');
+                let prods = await resProd.json();
+
                 if(catSelect.value && catSelect.value !== "Todas") {
                     prods = prods.filter(p => p.categoria === catSelect.value);
                 }
+
                 catalogGrid.innerHTML = prods.map(p => `
                     <div class="card p-3 flex flex-col justify-between items-center text-center">
                         ${p.imagen ? `<img src="${p.imagen}" class="w-full h-24 object-cover rounded-lg mb-2 border border-slate-700">` : `<div class="w-full h-24 bg-slate-800 rounded-lg flex items-center justify-center text-2xl mb-2 text-slate-600">🍔</div>`}
                         <div class="font-bold text-sm mb-1">${p.nombre}</div>
-                        <div class="text-emerald-400 font-bold mb-2">$${p.precio.toFixed(2)}</div>
+                        <div class="text-emerald-400 font-bold mb-2">$${parseFloat(p.precio).toFixed(2)}</div>
                         <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1 px-2 rounded text-xs">Agregar +</button>
                     </div>
                 `).join("");
-            };
+            } catch(e) {
+                catalogGrid.innerHTML = `<div class="text-slate-400 col-span-3">Conectando con Cloudflare...</div>`;
+            }
         }
 
-        function handleAddToCart(id, nombre, precio, requiereSalsa) {
+        async function handleAddToCart(id, nombre, precio, requiereSalsa) {
             if (requiereSalsa) {
                 currentModalItem = { id, nombre, precio };
                 document.getElementById("modalTitle").innerText = `Opciones para: ${nombre}`;
                 
-                const tx = db.transaction("salsas", "readonly");
-                tx.objectStore("salsas").getAll().onsuccess = (e) => {
-                    const salsas = e.target.result;
+                // Cargar salsas desde Cloudflare
+                try {
+                    const resSalsas = await fetch('/api/salsas');
+                    const salsas = await resSalsas.json();
                     document.getElementById("modalSauceSelect").innerHTML = salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
                     document.getElementById("sauceModal").classList.remove("hidden");
-                };
+                } catch(e) {
+                    cart.push({ nombre, precio });
+                    renderCart();
+                }
             } else {
                 cart.push({ nombre, precio });
                 renderCart();
@@ -513,7 +484,7 @@
             document.getElementById("cartTotal").innerText = `$${total.toFixed(2)}`;
         }
 
-        function submitOrder() {
+        async function submitOrder() {
             const client = document.getElementById("orderClient").value.trim();
             if (!client) return alert("Ingresa el nombre del cliente o mesa.");
             if (cart.length === 0) return alert("El carrito está vacío.");
@@ -522,12 +493,9 @@
             const razon = document.getElementById("factRazon").value.trim();
             const phone = document.getElementById("factPhone").value.trim();
             const email = document.getElementById("factEmail").value.trim();
-
             const total = cart.reduce((acc, i) => acc + i.precio, 0);
-            const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-            const tx = db.transaction("pedidos", "readwrite");
-            tx.objectStore("pedidos").add({
+            const order = {
                 cliente: client,
                 fact_ruc: ruc || "Consumidor Final",
                 fact_razon: razon || client,
@@ -538,26 +506,32 @@
                 estado: "pendiente",
                 mesero: currentUser.nombre,
                 metodo_pago: "Efectivo",
-                fecha_hora: now
+                fecha_hora: new Date().toISOString().replace('T', ' ').substring(0, 19)
+            };
+
+            await fetch('/api/pedidos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(order)
             });
 
-            tx.oncomplete = () => {
-                cart = [];
-                document.getElementById("orderClient").value = "";
-                document.getElementById("factRuc").value = "";
-                document.getElementById("factRazon").value = "";
-                document.getElementById("factPhone").value = "";
-                document.getElementById("factEmail").value = "";
-                renderCart();
-                alert("¡Pedido registrado exitosamente!");
-            };
+            cart = [];
+            document.getElementById("orderClient").value = "";
+            document.getElementById("factRuc").value = "";
+            document.getElementById("factRazon").value = "";
+            document.getElementById("factPhone").value = "";
+            document.getElementById("factEmail").value = "";
+            renderCart();
+            alert("¡Pedido registrado y sincronizado en la nube!");
         }
 
-        function renderCaja() {
+        async function renderCaja() {
             const container = document.getElementById("pendingOrders");
-            const tx = db.transaction("pedidos", "readonly");
-            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
-                const pending = e.target.result.filter(p => p.estado !== "cobrado" && p.estado !== "anulado");
+            try {
+                const res = await fetch('/api/pedidos');
+                const orders = await res.json();
+                const pending = orders.filter(p => p.estado !== "cobrado" && p.estado !== "anulado");
+
                 container.innerHTML = pending.map(p => `
                     <div class="card p-4 space-y-3">
                         <div class="flex justify-between items-center">
@@ -567,10 +541,8 @@
                         <div class="text-xs text-slate-400 bg-slate-900 p-2 rounded space-y-0.5">
                             <div>Razón Social: <span class="text-white font-medium">${p.fact_razon || p.cliente}</span></div>
                             <div>RUC/CI: <span class="text-white font-medium">${p.fact_ruc || 'N/A'}</span></div>
-                            <div>Telf: <span class="text-white font-medium">${p.fact_phone || 'N/A'}</span></div>
-                            <div>Email: <span class="text-white font-medium">${p.fact_email || 'N/A'}</span></div>
                         </div>
-                        <div class="text-2xl font-bold text-emerald-400">$${p.total.toFixed(2)}</div>
+                        <div class="text-2xl font-bold text-emerald-400">$${parseFloat(p.total).toFixed(2)}</div>
                         <select id="payMethod_${p.id}" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
                             <option value="Efectivo">Efectivo</option>
                             <option value="Transf. Banco de Loja">Transf. Banco de Loja</option>
@@ -579,27 +551,26 @@
                         <button onclick="processPayment(${p.id})" class="w-full btn-primary py-2 rounded text-sm">💵 COBRAR</button>
                     </div>
                 `).join("");
-            };
+            } catch(e){}
         }
 
-        function processPayment(orderId) {
+        async function processPayment(orderId) {
             const method = document.getElementById(`payMethod_${orderId}`).value;
-            const tx = db.transaction("pedidos", "readwrite");
-            const store = tx.objectStore("pedidos");
-            store.get(orderId).onsuccess = (e) => {
-                const order = e.target.result;
-                order.estado = "cobrado";
-                order.metodo_pago = method;
-                store.put(order);
-                tx.oncomplete = () => renderCaja();
-            };
+            await fetch(`/api/pedidos/${orderId}/cobrar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ metodo_pago: method })
+            });
+            renderCaja();
         }
 
-        function renderCocina() {
+        async function renderCocina() {
             const container = document.getElementById("kitchenOrders");
-            const tx = db.transaction("pedidos", "readonly");
-            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
-                const pending = e.target.result.filter(p => p.estado === "pendiente");
+            try {
+                const res = await fetch('/api/pedidos');
+                const orders = await res.json();
+                const pending = orders.filter(p => p.estado === "pendiente");
+
                 container.innerHTML = pending.map(p => {
                     const items = JSON.parse(p.items);
                     return `
@@ -612,36 +583,30 @@
                         </div>
                     `;
                 }).join("");
-            };
+            } catch(e){}
         }
 
-        function markKitchenReady(orderId) {
-            const tx = db.transaction("pedidos", "readwrite");
-            const store = tx.objectStore("pedidos");
-            store.get(orderId).onsuccess = (e) => {
-                const order = e.target.result;
-                order.estado = "listo";
-                store.put(order);
-                tx.oncomplete = () => renderCocina();
-            };
+        async function markKitchenReady(orderId) {
+            await fetch(`/api/pedidos/${orderId}/listo`, { method: 'POST' });
+            renderCocina();
         }
 
-        function renderReports() {
+        async function renderReports() {
             const dateVal = document.getElementById("reportDate").value;
-            const tx = db.transaction("pedidos", "readonly");
-            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
-                let orders = e.target.result;
+            try {
+                const res = await fetch('/api/pedidos');
+                let orders = await res.json();
                 if(dateVal) orders = orders.filter(p => p.fecha_hora.startsWith(dateVal));
 
                 const cobrados = orders.filter(p => p.estado === "cobrado");
-                const totalVentas = cobrados.reduce((acc, p) => acc + p.total, 0);
+                const totalVentas = cobrados.reduce((acc, p) => acc + parseFloat(p.total), 0);
 
                 document.getElementById("kpiTotal").innerText = `$${totalVentas.toFixed(2)}`;
                 document.getElementById("kpiCount").innerText = cobrados.length;
 
                 const methods = {};
                 cobrados.forEach(p => {
-                    methods[p.metodo_pago] = (methods[p.metodo_pago] || 0) + p.total;
+                    methods[p.metodo_pago] = (methods[p.metodo_pago] || 0) + parseFloat(p.total);
                 });
 
                 document.getElementById("paymentBreakdown").innerHTML = Object.keys(methods).length ? Object.entries(methods).map(([method, amt]) => `
@@ -664,134 +629,60 @@
                             <td class="p-2">${p.fact_email || 'N/A'}</td>
                             <td class="p-2 text-xs">${items}</td>
                             <td class="p-2">${p.metodo_pago}</td>
-                            <td class="p-2 font-bold text-emerald-400">$${p.total.toFixed(2)}</td>
+                            <td class="p-2 font-bold text-emerald-400">$${parseFloat(p.total).toFixed(2)}</td>
                             <td class="p-2"><span class="px-2 py-1 text-xs rounded font-bold ${p.estado === 'cobrado' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">${p.estado}</span></td>
                         </tr>
                     `;
                 }).join("");
-            };
+            } catch(e){}
         }
 
-        function generarFacturaCompletaContadoraPDF() {
+        async function generarFacturaCompletaContadoraPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
             const dateVal = document.getElementById("reportDate").value;
 
-            const tx = db.transaction("pedidos", "readonly");
-            tx.objectStore("pedidos").getAll().onsuccess = (e) => {
-                let orders = e.target.result;
-                if(dateVal) orders = orders.filter(p => p.fecha_hora.startsWith(dateVal));
+            const res = await fetch('/api/pedidos');
+            let orders = await res.json();
+            if(dateVal) orders = orders.filter(p => p.fecha_hora.startsWith(dateVal));
 
-                const cobrados = orders.filter(p => p.estado === "cobrado");
-                if (cobrados.length === 0) return alert("No existen ventas cobradas para generar el reporte.");
+            const cobrados = orders.filter(p => p.estado === "cobrado");
+            if (cobrados.length === 0) return alert("No existen ventas cobradas para generar el reporte.");
 
-                doc.setFontSize(18);
-                doc.setTextColor(16, 185, 129);
-                doc.text("⚡ FastFood POS Pro - Reporte Contable de Ventas", 14, 15);
+            doc.setFontSize(18);
+            doc.setTextColor(16, 185, 129);
+            doc.text("⚡ FastFood POS Pro - Reporte Contable de Ventas", 14, 15);
 
-                doc.setFontSize(10);
-                doc.setTextColor(100);
-                const fechaTexto = dateVal ? `Fecha filtrada: ${dateVal}` : "Todas las fechas";
-                doc.text(`${fechaTexto} | Generado el: ${new Date().toLocaleString()}`, 14, 22);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 22);
 
-                let totalVentas = 0;
-                const rows = cobrados.map(p => {
-                    totalVentas += p.total;
-                    const itemsText = JSON.parse(p.items).map(i => i.nombre).join(", ");
-                    return [
-                        `#${p.id}`, p.fecha_hora, p.fact_razon || p.cliente,
-                        p.fact_ruc || 'Consumidor Final', p.fact_phone || 'N/A',
-                        p.fact_email || 'N/A', itemsText, p.metodo_pago, `$${p.total.toFixed(2)}`
-                    ];
-                });
+            let totalVentas = 0;
+            const rows = cobrados.map(p => {
+                totalVentas += parseFloat(p.total);
+                const itemsText = JSON.parse(p.items).map(i => i.nombre).join(", ");
+                return [
+                    `#${p.id}`, p.fecha_hora, p.fact_razon || p.cliente,
+                    p.fact_ruc || 'Consumidor Final', p.fact_phone || 'N/A',
+                    p.fact_email || 'N/A', itemsText, p.metodo_pago, `$${parseFloat(p.total).toFixed(2)}`
+                ];
+            });
 
-                doc.autoTable({
-                    startY: 28,
-                    head: [['ID', 'Fecha/Hora', 'Cliente / Razón Social', 'RUC / Cédula', 'Teléfono', 'Correo', 'Detalle Pedido', 'Forma Pago', 'Total']],
-                    body: rows,
-                    styles: { fontSize: 8, cellPadding: 2 },
-                    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
-                    alternateRowStyles: { fillColor: [240, 243, 246] }
-                });
+            doc.autoTable({
+                startY: 28,
+                head: [['ID', 'Fecha/Hora', 'Cliente / Razón Social', 'RUC / Cédula', 'Teléfono', 'Correo', 'Detalle Pedido', 'Forma Pago', 'Total']],
+                body: rows,
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] }
+            });
 
-                const finalY = doc.lastAutoTable.finalY + 10;
-                doc.setFontSize(12);
-                doc.setTextColor(0);
-                doc.text(`Total Registros: ${cobrados.length}`, 14, finalY);
-                doc.text(`Monto Total Cobrado: $${totalVentas.toFixed(2)}`, 14, finalY + 6);
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text(`Total Registros: ${cobrados.length}`, 14, finalY);
+            doc.text(`Monto Total Cobrado: $${totalVentas.toFixed(2)}`, 14, finalY + 6);
 
-                doc.save(`Reporte_Contadora_${dateVal || 'General'}.pdf`);
-            };
-        }
-
-        // --- FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN DE INVENTARIO ---
-        function exportarInventarioJSON() {
-            const tx = db.transaction(["productos", "categorias", "salsas"], "readonly");
-            const backupData = {};
-
-            tx.objectStore("categorias").getAll().onsuccess = (e1) => {
-                backupData.categorias = e1.target.result;
-                tx.objectStore("salsas").getAll().onsuccess = (e2) => {
-                    backupData.salsas = e2.target.result;
-                    tx.objectStore("productos").getAll().onsuccess = (e3) => {
-                        backupData.productos = e3.target.result;
-
-                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-                        const downloadAnchor = document.createElement('a');
-                        downloadAnchor.setAttribute("href", dataStr);
-                        downloadAnchor.setAttribute("download", `Respaldo_Inventario_POS_${new Date().toISOString().slice(0,10)}.json`);
-                        document.body.appendChild(downloadAnchor);
-                        downloadAnchor.click();
-                        downloadAnchor.remove();
-                    };
-                };
-            };
-        }
-
-        function importarInventarioJSON() {
-            const fileInput = document.getElementById("importFile");
-            const file = fileInput.files[0];
-            if (!file) return alert("Por favor, selecciona un archivo .json de respaldo.");
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (!data.productos || !data.categorias) {
-                        return alert("El archivo no tiene la estructura correcta de inventario.");
-                    }
-
-                    if (!confirm("Esta acción reemplazará las categorías, salsas y productos actuales. ¿Deseas continuar?")) return;
-
-                    const tx = db.transaction(["productos", "categorias", "salsas"], "readwrite");
-                    
-                    // Limpiar datos actuales
-                    tx.objectStore("categorias").clear();
-                    tx.objectStore("salsas").clear();
-                    tx.objectStore("productos").clear();
-
-                    // Insertar nuevos datos
-                    data.categorias.forEach(c => tx.objectStore("categorias").add({ nombre: c.nombre }));
-                    if (data.salsas) data.salsas.forEach(s => tx.objectStore("salsas").add({ nombre: s.nombre }));
-                    data.productos.forEach(p => tx.objectStore("productos").add({
-                        nombre: p.nombre,
-                        precio: p.precio,
-                        categoria: p.categoria,
-                        requiere_salsa: p.requiere_salsa,
-                        imagen: p.imagen || ""
-                    }));
-
-                    tx.oncomplete = () => {
-                        alert("¡Inventario e Secciones importados exitosamente!");
-                        fileInput.value = "";
-                        renderAdminConfig();
-                    };
-
-                } catch (err) {
-                    alert("Ocurrió un error al leer el archivo JSON.");
-                }
-            };
-            reader.readAsText(file);
+            doc.save(`Reporte_Contadora_${dateVal || 'General'}.pdf`);
         }
 
         function renderAdminConfig() {
@@ -802,32 +693,30 @@
         }
 
         // --- GESTIÓN DE PRODUCTOS ---
-        function renderProductsTable() {
+        async function renderProductsTable() {
             const table = document.getElementById("productsTableBody");
             const catSelect = document.getElementById("newProdCategory");
 
-            const txCat = db.transaction("categorias", "readonly");
-            txCat.objectStore("categorias").getAll().onsuccess = (e) => {
-                const cats = e.target.result;
+            try {
+                const resCat = await fetch('/api/categorias');
+                const cats = await resCat.json();
                 catSelect.innerHTML = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
-            };
+            } catch(e){}
 
-            const txProd = db.transaction("productos", "readonly");
-            txProd.objectStore("productos").getAll().onsuccess = (e) => {
-                const prods = e.target.result;
+            try {
+                const resProd = await fetch('/api/productos');
+                const prods = await resProd.json();
                 table.innerHTML = prods.map(p => `
                     <tr>
-                        <td class="p-2">
-                            ${p.imagen ? `<img src="${p.imagen}" class="w-10 h-10 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}
-                        </td>
+                        <td class="p-2">${p.imagen ? `<img src="${p.imagen}" class="w-10 h-10 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}</td>
                         <td class="p-2 font-bold">${p.nombre}</td>
-                        <td class="p-2 text-emerald-400 font-bold">$${p.precio.toFixed(2)}</td>
+                        <td class="p-2 text-emerald-400 font-bold">$${parseFloat(p.precio).toFixed(2)}</td>
                         <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs">${p.categoria}</span></td>
                         <td class="p-2">${p.requiere_salsa ? '✅ Sí' : '❌ No'}</td>
                         <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
                     </tr>
                 `).join("");
-            };
+            } catch(e){}
         }
 
         async function addProduct() {
@@ -843,58 +732,43 @@
 
             let imageBase64 = "";
             if (imageFile) {
-                imageBase64 = await convertFileToBase64(imageFile);
+                imageBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.readAsDataURL(imageFile);
+                });
             }
 
-            const tx = db.transaction("productos", "readwrite");
-            tx.objectStore("productos").add({
-                nombre: name,
-                precio: price,
-                categoria: category,
-                requiere_salsa: requiresSauce,
-                imagen: imageBase64
+            await fetch('/api/productos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: name, precio: price, categoria: category, requiere_salsa: requiresSauce, imagen: imageBase64 })
             });
 
-            tx.oncomplete = () => {
-                document.getElementById("newProdName").value = "";
-                document.getElementById("newProdPrice").value = "";
-                document.getElementById("newProdSauce").checked = false;
-                document.getElementById("newProdImage").value = "";
-                renderProductsTable();
-            };
+            document.getElementById("newProdName").value = "";
+            document.getElementById("newProdPrice").value = "";
+            document.getElementById("newProdSauce").checked = false;
+            document.getElementById("newProdImage").value = "";
+            renderProductsTable();
         }
 
-        function convertFileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function deleteProduct(id) {
+        async function deleteProduct(id) {
             if(!confirm("¿Eliminar este producto?")) return;
-            const tx = db.transaction("productos", "readwrite");
-            tx.objectStore("productos").delete(id);
-            tx.oncomplete = () => renderProductsTable();
+            await fetch(`/api/productos/${id}`, { method: 'DELETE' });
+            renderProductsTable();
         }
 
-        // --- GESTIÓN DE USUARIOS ---
+        // --- GESTIÓN DE USUARIOS Y CATEGORÍAS ---
         function renderUsersTable() {
             const table = document.getElementById("usersTableBody");
-            const tx = db.transaction("usuarios", "readonly");
-            tx.objectStore("usuarios").getAll().onsuccess = (e) => {
-                const users = e.target.result;
-                table.innerHTML = users.map(u => `
-                    <tr>
-                        <td class="p-2">${u.nombre}</td>
-                        <td class="p-2">${u.usuario}</td>
-                        <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
-                        <td class="p-2"><button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
-                    </tr>
-                `).join("");
-            };
+            table.innerHTML = usuarios.map(u => `
+                <tr>
+                    <td class="p-2">${u.nombre}</td>
+                    <td class="p-2">${u.usuario}</td>
+                    <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
+                    <td class="p-2"><button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
+                </tr>
+            `).join("");
         }
 
         function addUser() {
@@ -903,95 +777,70 @@
             const pass = document.getElementById("newPassword").value.trim();
             const role = document.getElementById("newRole").value;
 
-            if(!name || !username || !pass) return alert("Completa todos los campos de usuario.");
+            if(!name || !username || !pass) return alert("Completa todos los campos.");
 
-            const tx = db.transaction("usuarios", "readwrite");
-            tx.objectStore("usuarios").add({ usuario: username, clave: pass, nombre: name, rol: role });
-            tx.oncomplete = () => {
-                document.getElementById("newFullName").value = "";
-                document.getElementById("newUsername").value = "";
-                document.getElementById("newPassword").value = "";
-                renderUsersTable();
-            };
+            usuarios.push({ usuario: username, clave: pass, nombre: name, rol: role });
+            document.getElementById("newFullName").value = "";
+            document.getElementById("newUsername").value = "";
+            document.getElementById("newPassword").value = "";
+            renderUsersTable();
         }
 
         function deleteUser(username) {
             if(username === "admin") return alert("No se puede eliminar el usuario principal admin.");
-            if(!confirm(`¿Eliminar usuario ${username}?`)) return;
-
-            const tx = db.transaction("usuarios", "readwrite");
-            tx.objectStore("usuarios").delete(username);
-            tx.oncomplete = () => renderUsersTable();
+            usuarios = usuarios.filter(u => u.usuario !== username);
+            renderUsersTable();
         }
 
-        // --- GESTIÓN DE CATEGORÍAS ---
-        function renderCategoriesList() {
+        async function renderCategoriesList() {
             const list = document.getElementById("catList");
-            const tx = db.transaction("categorias", "readonly");
-            tx.objectStore("categorias").getAll().onsuccess = (e) => {
-                const cats = e.target.result;
+            try {
+                const res = await fetch('/api/categorias');
+                const cats = await res.json();
                 list.innerHTML = cats.map(c => `
                     <li class="py-2 flex justify-between items-center">
                         <span>${c.nombre}</span>
-                        <button onclick="deleteCategory(${c.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button>
                     </li>
                 `).join("");
-            };
+            } catch(e){}
         }
 
-        function addCategory() {
+        async function addCategory() {
             const name = document.getElementById("newCatName").value.trim();
             if(!name) return;
-            const tx = db.transaction("categorias", "readwrite");
-            tx.objectStore("categorias").add({ nombre: name });
-            tx.oncomplete = () => {
-                document.getElementById("newCatName").value = "";
-                renderCategoriesList();
-                renderProductsTable();
-            };
+            await fetch('/api/categorias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: name })
+            });
+            document.getElementById("newCatName").value = "";
+            renderCategoriesList();
+            renderProductsTable();
         }
 
-        function deleteCategory(id) {
-            if(!confirm("¿Eliminar esta sección?")) return;
-            const tx = db.transaction("categorias", "readwrite");
-            tx.objectStore("categorias").delete(id);
-            tx.oncomplete = () => {
-                renderCategoriesList();
-                renderProductsTable();
-            };
-        }
-
-        // --- GESTIÓN DE SALSAS ---
-        function renderSaucesList() {
+        async function renderSaucesList() {
             const list = document.getElementById("sauceList");
-            const tx = db.transaction("salsas", "readonly");
-            tx.objectStore("salsas").getAll().onsuccess = (e) => {
-                const sauces = e.target.result;
+            try {
+                const res = await fetch('/api/salsas');
+                const sauces = await res.json();
                 list.innerHTML = sauces.map(s => `
                     <li class="py-2 flex justify-between items-center">
                         <span>${s.nombre}</span>
-                        <button onclick="deleteSauce(${s.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button>
                     </li>
                 `).join("");
-            };
+            } catch(e){}
         }
 
-        function addSauce() {
+        async function addSauce() {
             const name = document.getElementById("newSauceName").value.trim();
             if(!name) return;
-            const tx = db.transaction("salsas", "readwrite");
-            tx.objectStore("salsas").add({ nombre: name });
-            tx.oncomplete = () => {
-                document.getElementById("newSauceName").value = "";
-                renderSaucesList();
-            };
-        }
-
-        function deleteSauce(id) {
-            if(!confirm("¿Eliminar esta salsa o término?")) return;
-            const tx = db.transaction("salsas", "readwrite");
-            tx.objectStore("salsas").delete(id);
-            tx.oncomplete = () => renderSaucesList();
+            await fetch('/api/salsas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: name })
+            });
+            document.getElementById("newSauceName").value = "";
+            renderSaucesList();
         }
     </script>
 </body>
