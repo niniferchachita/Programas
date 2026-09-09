@@ -13,6 +13,11 @@ export async function onRequest(context) {
     return new Response(null, { headers });
   }
 
+  // Comprobar si existe el binding
+  if (!env.DB) {
+    return new Response(JSON.stringify({ error: "Binding DB no encontrado en Cloudflare." }), { status: 500, headers });
+  }
+
   try {
     // --- PRODUCTOS ---
     if (path === 'productos' && request.method === 'GET') {
@@ -34,7 +39,7 @@ export async function onRequest(context) {
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
-    // --- CATEGORIAS / SECCIONES ---
+    // --- CATEGORIAS ---
     if (path === 'categorias' && request.method === 'GET') {
       const { results } = await env.DB.prepare("SELECT * FROM categorias").all();
       return new Response(JSON.stringify(results || []), { headers });
@@ -69,19 +74,6 @@ export async function onRequest(context) {
       await env.DB.prepare(
         "INSERT INTO pedidos (cliente, fact_ruc, fact_razon, fact_phone, fact_email, items, total, estado, mesero, metodo_pago, fecha_hora) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
       ).bind(p.cliente, p.fact_ruc, p.fact_razon, p.fact_phone, p.fact_email, p.items, Number(p.total), p.estado, p.mesero, p.metodo_pago, p.fecha_hora).run();
-      return new Response(JSON.stringify({ success: true }), { headers });
-    }
-
-    if (path.includes('/cobrar') && request.method === 'POST') {
-      const id = path.split('/')[1];
-      const data = await request.json();
-      await env.DB.prepare("UPDATE pedidos SET estado = 'cobrado', metodo_pago = ? WHERE id = ?").bind(data.metodo_pago, id).run();
-      return new Response(JSON.stringify({ success: true }), { headers });
-    }
-
-    if (path.includes('/listo') && request.method === 'POST') {
-      const id = path.split('/')[1];
-      await env.DB.prepare("UPDATE pedidos SET estado = 'listo' WHERE id = ?").bind(id).run();
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
