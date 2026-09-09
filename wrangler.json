@@ -1,12 +1,13 @@
 {
   "name": "programas",
   "compatibility_date": "2026-09-08",
-  "pages_build_output_dir": ".",
+  "assets": {
+    "directory": "."
+  },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "programa D1",
-      "database_id": "programa D1"
+      "database_name": "programa D1"
     }
   ]
 }
