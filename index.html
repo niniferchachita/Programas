@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ FastFood POS Pro Cloud</title>
+    <title>⚡ FastFood POS Pro Web</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Librerías jsPDF y AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -19,7 +19,7 @@
 
     <!-- HEADER -->
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-emerald-400">⚡ FastFood POS Pro Cloud</h1>
+        <h1 class="text-xl font-bold text-emerald-400">⚡ FastFood POS Pro</h1>
         <div id="userInfo" class="flex items-center gap-4 hidden">
             <span id="userBadge" class="text-sm font-semibold bg-slate-700 px-3 py-1 rounded-full"></span>
             <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Cerrar Sesión</button>
@@ -174,22 +174,6 @@
             <section id="viewAdmin" class="hidden space-y-6">
                 <h2 class="text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
 
-                <!-- SECCIÓN DE RESPALDOS -->
-                <div class="card p-6 border-l-4 border-sky-500 space-y-3">
-                    <h3 class="font-bold text-lg text-sky-400">💾 Respaldos de Inventario y Secciones</h3>
-                    <p class="text-xs text-slate-400">Exporta o importa el catálogo de productos, fotos y secciones para crear copias de seguridad o transferirlos a otro equipo.</p>
-                    <div class="flex flex-wrap gap-4 items-center pt-2">
-                        <button onclick="exportarInventarioJSON()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
-                            📤 Exportar Inventario (Backup JSON)
-                        </button>
-                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2">
-                            <label class="text-xs font-bold text-slate-300">📥 Importar Respaldo:</label>
-                            <input type="file" id="importFile" accept=".json" class="text-xs text-slate-300">
-                            <button onclick="importarInventarioJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded font-bold text-xs">Cargar</button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- GESTIÓN DE PRODUCTOS POR SECCIÓN CON IMAGEN -->
                 <div class="card p-6 space-y-4 border-l-4 border-emerald-500">
                     <h3 class="font-bold text-lg text-emerald-400">🍔 Gestión de Productos por Sección</h3>
@@ -302,7 +286,6 @@
         let cart = [];
         let currentModalItem = null;
 
-        // Usuarios predeterminados del sistema
         let usuarios = [
             { usuario: "admin", clave: "admin", nombre: "Administrador", rol: "admin" },
             { usuario: "mesero1", clave: "1234", nombre: "Carlos Gómez", rol: "mesero" },
@@ -382,12 +365,11 @@
             if (viewId === "Admin") renderAdminConfig();
         }
 
-        // --- CATALOGO Y PRODUCTOS CLOUDFLARE API ---
+        // --- FUNCIONES API CONECTADAS A CLOUDFLARE D1 ---
         async function renderCatalog() {
             const catSelect = document.getElementById("filterCategory");
             const catalogGrid = document.getElementById("catalogGrid");
 
-            // Cargar categorías
             try {
                 const resCat = await fetch('/api/categorias');
                 const cats = await resCat.json();
@@ -396,7 +378,6 @@
                 if(currentVal) catSelect.value = currentVal;
             } catch(e){}
 
-            // Cargar productos de la nube
             try {
                 const resProd = await fetch('/api/productos');
                 let prods = await resProd.json();
@@ -422,8 +403,6 @@
             if (requiereSalsa) {
                 currentModalItem = { id, nombre, precio };
                 document.getElementById("modalTitle").innerText = `Opciones para: ${nombre}`;
-                
-                // Cargar salsas desde Cloudflare
                 try {
                     const resSalsas = await fetch('/api/salsas');
                     const salsas = await resSalsas.json();
@@ -522,7 +501,7 @@
             document.getElementById("factPhone").value = "";
             document.getElementById("factEmail").value = "";
             renderCart();
-            alert("¡Pedido registrado y sincronizado en la nube!");
+            alert("¡Pedido registrado y guardado en Cloudflare!");
         }
 
         async function renderCaja() {
