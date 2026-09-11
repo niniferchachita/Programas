@@ -2,102 +2,124 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>⚡ New Haven POS Pro Web</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Librerías jsPDF y AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; touch-action: manipulation; }
         .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
         .btn-primary { background-color: #10b981; color: white; font-weight: bold; }
         .btn-primary:hover { background-color: #059669; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        button, input, select { min-height: 42px; }
     </style>
 </head>
-<body class="h-screen flex flex-col">
+<body class="h-screen flex flex-col overflow-hidden relative">
 
-    <!-- HEADER -->
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-emerald-400">⚡ New Haven POS Pro</h1>
-        <div id="userInfo" class="flex items-center gap-4 hidden">
-            <span id="userBadge" class="text-sm font-semibold bg-slate-700 px-3 py-1 rounded-full"></span>
-            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">Cerrar Sesión</button>
+    <!-- MARCA DE AGUA (WATERMARK) EN LA ESQUINA INFERIOR DERECHA -->
+    <div class="fixed bottom-2 right-3 pointer-events-none z-50 text-[10px] md:text-xs font-semibold text-slate-500/60 tracking-wider uppercase select-none">
+        Developed by JM
+    </div>
+
+    <!-- HEADER CON MENÚ HAMBURGUESA PARA MÓVILES -->
+    <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex justify-between items-center shrink-0 z-40 relative">
+        <div class="flex items-center gap-3">
+            <button id="btnMobileMenu" onclick="toggleMobileMenu()" class="md:hidden bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-lg min-h-0 hidden">
+                ☰
+            </button>
+            <h1 class="text-base md:text-xl font-bold text-emerald-400 flex items-center gap-1">⚡ New Haven POS</h1>
+        </div>
+        
+        <div id="userInfo" class="flex items-center gap-2 md:gap-4 hidden">
+            <span id="userBadge" class="text-xs md:text-sm font-semibold bg-slate-700 px-2.5 py-1 rounded-full truncate max-w-[130px] md:max-w-none"></span>
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold min-h-0">Salir</button>
         </div>
     </header>
 
     <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="flex-1 flex items-center justify-center p-4">
-        <div class="card p-8 w-full max-w-md shadow-xl text-center">
+    <div id="loginScreen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="card p-6 md:p-8 w-full max-w-md shadow-xl text-center">
             <h2 class="text-2xl font-bold text-emerald-400 mb-1">⚡ New Haven POS</h2>
             <p class="text-slate-400 text-sm mb-6">Inicio de Sesión Centralizado</p>
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <input type="text" id="loginUser" placeholder="Usuario" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" required>
-                <input type="password" id="loginPass" placeholder="Contraseña" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" required>
-                <button type="submit" class="w-full btn-primary p-3 rounded-lg">INGRESAR AL SISTEMA</button>
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs text-slate-400 font-bold block mb-1">Usuario</label>
+                    <input type="text" id="loginUser" placeholder="Ingresa tu usuario" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" required>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 font-bold block mb-1">Contraseña</label>
+                    <input type="password" id="loginPass" placeholder="Ingresa tu clave" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" required>
+                </div>
+                <button type="submit" class="w-full btn-primary p-3 rounded-lg text-base">INGRESAR AL SISTEMA</button>
             </form>
             <p class="text-xs text-slate-500 mt-4">Demo: admin/admin, mesero1/1234, multi1/1234</p>
         </div>
     </div>
 
     <!-- MAIN APP SCREEN -->
-    <div id="appScreen" class="flex-1 flex flex-col md:flex-row overflow-hidden hidden">
+    <div id="appScreen" class="flex-1 flex flex-col md:flex-row overflow-hidden hidden relative">
         
-        <!-- SIDEBAR -->
-        <nav id="sidebar" class="w-full md:w-64 bg-slate-800 p-4 border-r border-slate-700 flex md:flex-col gap-2 overflow-x-auto">
+        <!-- SIDEBAR / MENÚ NAVEGACIÓN -->
+        <nav id="sidebar" class="w-full md:w-64 bg-slate-800 p-2 md:p-4 border-b md:border-b-0 md:border-r border-slate-700 flex md:flex-col gap-2 overflow-x-auto shrink-0 z-30">
         </nav>
 
-        <!-- MAIN -->
-        <main class="flex-1 p-6 overflow-y-auto">
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 p-3 md:p-6 overflow-y-auto">
 
             <!-- VISTA: TOMAR PEDIDO -->
             <section id="viewPedido" class="hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 space-y-4">
-                        <div class="flex items-center gap-4 bg-slate-800 p-4 rounded-xl">
-                            <label class="font-bold text-sm">📁 Sección:</label>
-                            <select id="filterCategory" onchange="renderCatalog()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"></select>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                    
+                    <!-- CATÁLOGO -->
+                    <div class="lg:col-span-2 space-y-3">
+                        <div class="flex items-center gap-3 bg-slate-800 p-3 rounded-xl">
+                            <label class="font-bold text-xs md:text-sm shrink-0">📁 Sección:</label>
+                            <select id="filterCategory" onchange="renderCatalog()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs md:text-sm"></select>
                         </div>
-                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 md:gap-4 p-1"></div>
                     </div>
 
-                    <!-- CARRITO & FACTURA -->
-                    <div class="card p-4 flex flex-col h-[700px]">
-                        <h3 class="font-bold text-lg mb-2">Orden del Cliente</h3>
-                        <input type="text" id="orderClient" placeholder="Cliente / Mesa" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm mb-2">
+                    <!-- CARRITO & COMPROBANTE -->
+                    <div class="card p-3 md:p-4 flex flex-col">
+                        <h3 class="font-bold text-base md:text-lg mb-2 flex justify-between items-center">
+                            <span>Orden del Cliente</span>
+                            <span id="mobileCartCount" class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full lg:hidden">0 items</span>
+                        </h3>
+                        <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs md:text-sm mb-2">
                         
-                        <!-- DATOS OPCIONALES DE FACTURA -->
-                        <div class="bg-slate-900 p-3 rounded-lg mb-2 space-y-2">
-                            <span class="text-xs font-bold text-emerald-400 block">📄 Datos de Facturación (Opcional)</span>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="factRuc" placeholder="RUC / Cédula" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
-                                <input type="text" id="factRazon" placeholder="Razón Social / Nombre" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="factPhone" placeholder="Teléfono" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
-                                <input type="email" id="factEmail" placeholder="Correo Electrónico" class="bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                        <!-- BOTÓN DATOS FACTURA -->
+                        <div class="mb-2">
+                            <button onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2 rounded-lg flex items-center justify-center gap-1.5 min-h-0">
+                                📄 Datos para Factura
+                            </button>
+                            <div id="facturaBadge" class="hidden text-xs text-emerald-400 font-semibold mt-1 bg-slate-900 p-1 rounded text-center">
+                                ✅ Datos cargados
                             </div>
                         </div>
 
                         <!-- ITEM ESPECIAL LIBRE -->
-                        <div class="bg-slate-900 p-2.5 rounded-lg mb-2">
-                            <span class="text-xs font-bold text-purple-400 block mb-1">✨ Pedido Especial / Libre</span>
-                            <div class="flex gap-2 mb-1">
+                        <div class="bg-slate-900 p-2 rounded-lg mb-2">
+                            <span class="text-xs font-bold text-purple-400 block mb-1">✨ Pedido Especial Libre</span>
+                            <div class="flex gap-1.5 mb-1">
                                 <input type="text" id="customItemDesc" placeholder="Descripción" class="w-2/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
-                                <input type="number" id="customItemPrice" placeholder="Precio ($)" class="w-1/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                <input type="number" id="customItemPrice" placeholder="Precio $" class="w-1/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
                             </div>
-                            <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold p-1 rounded">Agregar Especial</button>
+                            <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold p-1 rounded min-h-0">Agregar</button>
                         </div>
 
                         <!-- ITEMS EN CARRITO -->
-                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 mb-2 pr-1"></div>
+                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 mb-2 pr-1 min-h-[120px] max-h-[250px]"></div>
 
                         <div class="border-t border-slate-700 pt-2 mt-auto">
-                            <div class="flex justify-between items-center text-lg font-bold text-emerald-400 mb-2">
+                            <div class="flex justify-between items-center text-base md:text-lg font-bold text-emerald-400 mb-2">
                                 <span>TOTAL:</span>
                                 <span id="cartTotal">$0.00</span>
                             </div>
-                            <button onclick="submitOrder()" class="w-full btn-primary p-2.5 rounded-lg">🚀 REGISTRAR PEDIDO</button>
+                            <button onclick="submitOrder()" class="w-full btn-primary p-2.5 rounded-lg text-sm md:text-base">🚀 REGISTRAR PEDIDO</button>
                         </div>
                     </div>
                 </div>
@@ -105,63 +127,65 @@
 
             <!-- VISTA: CAJA -->
             <section id="viewCaja" class="hidden space-y-4">
-                <h2 class="text-2xl font-bold text-sky-400">💰 Panel de Cobros y Caja</h2>
-                <div id="pendingOrders" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                <h2 class="text-xl md:text-2xl font-bold text-sky-400">💰 Panel de Cobros y Caja</h2>
+                <div id="pendingOrders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"></div>
             </section>
 
             <!-- VISTA: COCINA -->
             <section id="viewCocina" class="hidden space-y-4">
-                <h2 class="text-2xl font-bold text-orange-400">🔥 Monitor de Cocina</h2>
-                <div id="kitchenOrders" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                <h2 class="text-xl md:text-2xl font-bold text-orange-400">🔥 Monitor de Cocina</h2>
+                <div id="kitchenOrders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"></div>
             </section>
 
             <!-- VISTA: REPORTES -->
-            <section id="viewReportes" class="hidden space-y-6">
-                <div class="flex justify-between items-center flex-wrap gap-4">
-                    <h2 class="text-2xl font-bold text-emerald-400">📊 Reportes y Facturación</h2>
-                    <button onclick="generarFacturaCompletaContadoraPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg">
-                        📄 Descargar Reporte PDF para Contadora
+            <section id="viewReportes" class="hidden space-y-4 md:space-y-6">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-emerald-400">📊 Reportes y Facturación</h2>
+                    <button onclick="generarFacturaCompletaContadoraPDF()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
+                        📄 Descargar Reporte PDF Contadora
                     </button>
                 </div>
                 
-                <div class="card p-4 flex flex-wrap gap-4 items-center">
-                    <label class="font-bold text-sm">📅 Filtrar por Fecha:</label>
-                    <input type="date" id="reportDate" onchange="renderReports()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+                <div class="card p-3 md:p-4 flex flex-wrap gap-3 items-center">
+                    <label class="font-bold text-xs md:text-sm">📅 Filtrar por Fecha:</label>
+                    <input type="date" id="reportDate" onchange="renderReports()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs md:text-sm w-full sm:w-auto">
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="card p-6 border-emerald-500 text-center">
-                        <span class="text-slate-400 text-sm">Total Ventas Cobradas</span>
-                        <div id="kpiTotal" class="text-3xl font-bold text-emerald-400 mt-2">$0.00</div>
+                <div class="grid grid-cols-2 gap-3 md:gap-4">
+                    <div class="card p-4 md:p-6 border-emerald-500 text-center">
+                        <span class="text-slate-400 text-xs md:text-sm">Ventas Cobradas</span>
+                        <div id="kpiTotal" class="text-xl md:text-3xl font-bold text-emerald-400 mt-1 md:mt-2">$0.00</div>
                     </div>
-                    <div class="card p-6 border-sky-500 text-center">
-                        <span class="text-slate-400 text-sm">Cantidad de Pedidos</span>
-                        <div id="kpiCount" class="text-3xl font-bold text-sky-400 mt-2">0</div>
+                    <div class="card p-4 md:p-6 border-sky-500 text-center">
+                        <span class="text-slate-400 text-xs md:text-sm">Cant. Pedidos</span>
+                        <div id="kpiCount" class="text-xl md:text-3xl font-bold text-sky-400 mt-1 md:mt-2">0</div>
                     </div>
                 </div>
 
-                <div class="card p-4">
-                    <h3 class="font-bold mb-3 text-sky-400">💳 Desglose por Formas de Pago</h3>
-                    <div id="paymentBreakdown" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+                <div class="card p-3 md:p-4">
+                    <h3 class="font-bold mb-2 text-xs md:text-sm text-sky-400">💳 Desglose por Formas de Pago</h3>
+                    <div id="paymentBreakdown" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5"></div>
                 </div>
 
-                <div class="card p-4">
-                    <h3 class="font-bold mb-3">📋 Historial de Ventas</h3>
+                <div class="card p-3 md:p-4">
+                    <h3 class="font-bold mb-3 text-xs md:text-sm">📋 Historial de Ventas</h3>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
+                        <table class="w-full text-left text-xs md:text-sm">
                             <thead class="bg-slate-700 text-slate-300">
                                 <tr>
                                     <th class="p-2">ID</th>
-                                    <th class="p-2">Fecha/Hora</th>
+                                    <th class="p-2">Fecha</th>
                                     <th class="p-2">Usuario</th>
-                                    <th class="p-2">Cliente / Razón Social</th>
-                                    <th class="p-2">RUC / Cédula</th>
-                                    <th class="p-2">Teléfono</th>
-                                    <th class="p-2">Correo</th>
-                                    <th class="p-2 w-1/4">Detalle</th>
-                                    <th class="p-2">Método Pago</th>
+                                    <th class="p-2">Razón Social</th>
+                                    <th class="p-2">RUC/CI</th>
+                                    <th class="p-2">Dirección</th>
+                                    <th class="p-2">Telf</th>
+                                    <th class="p-2">Email</th>
+                                    <th class="p-2 min-w-[150px]">Detalle</th>
+                                    <th class="p-2">Pago</th>
                                     <th class="p-2">Total</th>
                                     <th class="p-2">Estado</th>
+                                    <th class="p-2">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="reportTableBody" class="divide-y divide-slate-700"></tbody>
@@ -170,50 +194,54 @@
                 </div>
             </section>
 
-            <!-- VISTA: ADMIN CONFIGURACIÓN -->
-            <section id="viewAdmin" class="hidden space-y-6">
-                <h2 class="text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
-
-                <!-- SECCIÓN DE RESPALDOS (COLOCADA AL INICIO) -->
-                <div class="card p-6 border-l-4 border-sky-500 space-y-3">
-                    <h3 class="font-bold text-lg text-sky-400">💾 Respaldos de Inventario y Secciones</h3>
-                    <p class="text-xs text-slate-400">Exporta o importa el catálogo de productos, fotos y secciones para crear copias de seguridad o transferirlos a otro equipo.</p>
-                    <div class="flex flex-wrap gap-4 items-center pt-2">
-                        <button onclick="exportarInventarioJSON()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
-                            📤 Exportar Inventario (Backup JSON)
+            <!-- VISTA: RESPALDOS DE SISTEMA -->
+            <section id="viewRespaldos" class="hidden space-y-4 md:space-y-6">
+                <h2 class="text-xl md:text-2xl font-bold text-sky-400">💾 Respaldos del Sistema</h2>
+                <div class="card p-4 md:p-6 border-l-4 border-sky-500 space-y-4">
+                    <h3 class="font-bold text-base md:text-lg text-sky-400">Copia de Seguridad Completa</h3>
+                    <p class="text-xs md:text-sm text-slate-300">
+                        Exporta e importa absolutamente **TODOS** los datos del sistema: empleados, productos, categorías, salsas/términos e historial completo de pedidos.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center pt-2">
+                        <button onclick="exportarSistemaCompletoJSON()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shadow flex items-center justify-center gap-2">
+                            📤 Exportar Respaldo Total (JSON)
                         </button>
                         <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2">
-                            <label class="text-xs font-bold text-slate-300">📥 Importar Respaldo:</label>
-                            <input type="file" id="importFile" accept=".json" class="text-xs text-slate-300">
-                            <button onclick="importarInventarioJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded font-bold text-xs">Cargar</button>
+                            <input type="file" id="importFileFull" accept=".json" class="text-xs text-slate-300 w-full">
+                            <button onclick="importarSistemaCompletoJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-bold text-xs shrink-0">Cargar</button>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <!-- GESTIÓN DE PRODUCTOS POR SECCIÓN CON IMAGEN -->
-                <div class="card p-6 space-y-4 border-l-4 border-emerald-500">
-                    <h3 class="font-bold text-lg text-emerald-400">🍔 Gestión de Productos por Sección</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                        <input type="text" id="newProdName" placeholder="Nombre del Producto" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                        <input type="number" step="0.01" id="newProdPrice" placeholder="Precio ($)" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                        <select id="newProdCategory" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white"></select>
+            <!-- VISTA: ADMIN CONFIGURACIÓN -->
+            <section id="viewAdmin" class="hidden space-y-4 md:space-y-6">
+                <h2 class="text-xl md:text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
+
+                <!-- GESTIÓN DE PRODUCTOS POR SECCIÓN -->
+                <div class="card p-4 md:p-6 space-y-4 border-l-4 border-emerald-500">
+                    <h3 class="font-bold text-base md:text-lg text-emerald-400">🍔 Gestión de Productos</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
+                        <input type="text" id="newProdName" placeholder="Nombre Producto" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                        <input type="number" step="0.01" id="newProdPrice" placeholder="Precio ($)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                        <select id="newProdCategory" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white"></select>
                         <input type="file" id="newProdImage" accept="image/*" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-300">
-                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded p-2 text-sm">
-                            <input type="checkbox" id="newProdSauce" class="rounded border-slate-700 text-emerald-500 focus:ring-emerald-500">
-                            <label for="newProdSauce" class="text-xs text-slate-300">¿Salsa / Término?</label>
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded p-2 text-xs">
+                            <input type="checkbox" id="newProdSauce" class="rounded border-slate-700 text-emerald-500">
+                            <label for="newProdSauce" class="text-slate-300">¿Salsa / Término?</label>
                         </div>
                     </div>
-                    <button onclick="addProduct()" class="btn-primary px-4 py-2 rounded text-sm w-full md:w-auto">➕ Guardar Producto</button>
+                    <button onclick="addProduct()" class="btn-primary px-4 py-2 rounded text-xs md:text-sm w-full md:w-auto">➕ Guardar Producto</button>
 
-                    <div class="overflow-x-auto mt-4">
-                        <table class="w-full text-left text-sm">
+                    <div class="overflow-x-auto mt-2">
+                        <table class="w-full text-left text-xs md:text-sm">
                             <thead class="bg-slate-700 text-slate-300">
                                 <tr>
-                                    <th class="p-2">Imagen</th>
+                                    <th class="p-2">Foto</th>
                                     <th class="p-2">Producto</th>
                                     <th class="p-2">Precio</th>
-                                    <th class="p-2">Sección / Categoría</th>
-                                    <th class="p-2">Salsa Req.</th>
+                                    <th class="p-2">Sección</th>
+                                    <th class="p-2">Salsa</th>
                                     <th class="p-2">Acción</th>
                                 </tr>
                             </thead>
@@ -223,13 +251,13 @@
                 </div>
 
                 <!-- GESTIÓN DE USUARIOS -->
-                <div class="card p-6 space-y-4">
-                    <h3 class="font-bold text-lg text-emerald-400">👥 Gestión de Usuarios y Personal</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input type="text" id="newFullName" placeholder="Nombre Completo" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                        <input type="text" id="newUsername" placeholder="Usuario (Login)" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                        <input type="password" id="newPassword" placeholder="Contraseña" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                        <select id="newRole" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                <div class="card p-4 md:p-6 space-y-4">
+                    <h3 class="font-bold text-base md:text-lg text-emerald-400">👥 Gestión de Personal</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                        <input type="text" id="newFullName" placeholder="Nombre Completo" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                        <input type="text" id="newUsername" placeholder="Usuario (Login)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                        <input type="password" id="newPassword" placeholder="Contraseña" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                        <select id="newRole" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
                             <option value="mesero">Mesero</option>
                             <option value="cocina">Cocina</option>
                             <option value="caja">Caja</option>
@@ -237,15 +265,15 @@
                             <option value="admin">Administrador</option>
                         </select>
                     </div>
-                    <button onclick="addUser()" class="btn-primary px-4 py-2 rounded text-sm w-full md:w-auto">➕ Guardar Usuario</button>
+                    <button onclick="addUser()" class="btn-primary px-4 py-2 rounded text-xs md:text-sm w-full md:w-auto">➕ Guardar Usuario</button>
 
-                    <div class="overflow-x-auto mt-4">
-                        <table class="w-full text-left text-sm">
+                    <div class="overflow-x-auto mt-2">
+                        <table class="w-full text-left text-xs md:text-sm">
                             <thead class="bg-slate-700 text-slate-300">
                                 <tr>
                                     <th class="p-2">Nombre</th>
                                     <th class="p-2">Usuario</th>
-                                    <th class="p-2">Rol / Cargo</th>
+                                    <th class="p-2">Cargo</th>
                                     <th class="p-2">Acción</th>
                                 </tr>
                             </thead>
@@ -255,44 +283,77 @@
                 </div>
 
                 <!-- SECCIONES Y SALSAS -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div class="card p-4 space-y-3">
-                        <h3 class="font-bold">📁 Secciones / Categorías</h3>
+                        <h3 class="font-bold text-sm md:text-base">📁 Secciones / Categorías</h3>
                         <div class="flex gap-2">
-                            <input type="text" id="newCatName" placeholder="Nueva Sección" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                            <button onclick="addCategory()" class="btn-primary px-4 py-2 rounded text-sm">Crear</button>
+                            <input type="text" id="newCatName" placeholder="Nueva Sección" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                            <button onclick="addCategory()" class="btn-primary px-3 py-2 rounded text-xs md:text-sm min-h-0">Crear</button>
                         </div>
-                        <ul id="catList" class="divide-y divide-slate-700 text-sm"></ul>
+                        <ul id="catList" class="divide-y divide-slate-700 text-xs md:text-sm"></ul>
                     </div>
 
                     <div class="card p-4 space-y-3">
-                        <h3 class="font-bold">🥫 Salsas y Términos</h3>
+                        <h3 class="font-bold text-sm md:text-base">🥫 Salsas y Términos</h3>
                         <div class="flex gap-2">
-                            <input type="text" id="newSauceName" placeholder="Ej: BBQ, Picante, Bien Cocido" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
-                            <button onclick="addSauce()" class="btn-primary px-4 py-2 rounded text-sm">Crear</button>
+                            <input type="text" id="newSauceName" placeholder="Ej: BBQ, Picante" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                            <button onclick="addSauce()" class="btn-primary px-3 py-2 rounded text-xs md:text-sm min-h-0">Crear</button>
                         </div>
-                        <ul id="sauceList" class="divide-y divide-slate-700 text-sm"></ul>
+                        <ul id="sauceList" class="divide-y divide-slate-700 text-xs md:text-sm"></ul>
                     </div>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- MODAL FACTURACIÓN -->
+    <div id="facturaModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-3 z-50 hidden">
+        <div class="card p-5 w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto">
+            <h3 class="font-bold text-base md:text-lg text-sky-400">📄 Datos de Facturación</h3>
+            <div class="space-y-2.5">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">RUC / Cédula:</label>
+                    <input type="text" id="modalFactRuc" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">Razón Social / Nombre Completo:</label>
+                    <input type="text" id="modalFactRazon" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">Dirección:</label>
+                    <input type="text" id="modalFactDir" placeholder="Ej: Av. Principal y Calle 2" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">Teléfono:</label>
+                    <input type="text" id="modalFactPhone" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">Correo Electrónico:</label>
+                    <input type="email" id="modalFactEmail" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end pt-2">
+                <button onclick="closeFacturaModal()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded text-xs md:text-sm font-bold min-h-0">Cancelar</button>
+                <button onclick="saveFacturaData()" class="btn-primary px-3 py-2 rounded text-xs md:text-sm min-h-0">Guardar Datos</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL SALSA -->
-    <div id="sauceModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden">
-        <div class="card p-6 w-full max-w-md space-y-4">
-            <h3 id="modalTitle" class="font-bold text-lg text-sky-400"></h3>
+    <div id="sauceModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-3 z-50 hidden">
+        <div class="card p-5 w-full max-w-md space-y-3">
+            <h3 id="modalTitle" class="font-bold text-base md:text-lg text-sky-400"></h3>
             <div>
                 <label class="text-xs font-bold text-slate-400 block mb-1">Selecciona Salsa o Término:</label>
-                <select id="modalSauceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"></select>
+                <select id="modalSauceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white"></select>
             </div>
             <div>
                 <label class="text-xs font-bold text-slate-400 block mb-1">Nota adicional (Opcional):</label>
-                <input type="text" id="modalNoteInput" placeholder="Ej: Bien crujiente" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                <input type="text" id="modalNoteInput" placeholder="Ej: Bien crujiente" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
             </div>
-            <div class="flex gap-2 justify-end">
-                <button onclick="closeSauceModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-sm font-bold">Cancelar</button>
-                <button onclick="confirmSauceModal()" class="btn-primary px-4 py-2 rounded text-sm">Agregar al Carrito</button>
+            <div class="flex gap-2 justify-end pt-2">
+                <button onclick="closeSauceModal()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded text-xs md:text-sm font-bold min-h-0">Cancelar</button>
+                <button onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded text-xs md:text-sm min-h-0">Agregar</button>
             </div>
         </div>
     </div>
@@ -343,6 +404,7 @@
         let currentUser = null;
         let cart = [];
         let currentModalItem = null;
+        let tempFacturaData = null;
 
         function handleLogin(e) {
             e.preventDefault();
@@ -370,13 +432,21 @@
         function logout() {
             currentUser = null;
             cart = [];
+            tempFacturaData = null;
             document.getElementById("appScreen").classList.add("hidden");
             document.getElementById("userInfo").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
+            document.getElementById("btnMobileMenu").classList.add("hidden");
+        }
+
+        function toggleMobileMenu() {
+            const nav = document.getElementById("sidebar");
+            nav.classList.toggle("hidden");
         }
 
         function setupNavigation() {
             const nav = document.getElementById("sidebar");
+            const btnMenu = document.getElementById("btnMobileMenu");
             nav.innerHTML = "";
 
             const views = {
@@ -390,27 +460,38 @@
                     { id: "Reportes", name: "📋 Lista de Ventas / Reportes" }
                 ],
                 "admin": [
-                    { id: "Pedido", name: "📝 Tomar Pedido" },
-                    { id: "Caja", name: "💰 Caja y Cobros" },
+                    { id: "Pedido", name: "📝 Pedido" },
+                    { id: "Caja", name: "💰 Caja" },
                     { id: "Cocina", name: "🔥 Cocina" },
-                    { id: "Reportes", name: "📊 Reportes & Facturas" },
-                    { id: "Admin", name: "⚙️ Configuración" }
+                    { id: "Reportes", name: "📊 Reportes" },
+                    { id: "Respaldos", name: "💾 Respaldos" },
+                    { id: "Admin", name: "⚙️ Config" }
                 ]
             };
 
             const allowed = views[currentUser.rol] || views["mesero"];
+            
+            if (allowed.length > 1) {
+                btnMenu.classList.remove("hidden");
+            } else {
+                btnMenu.classList.add("hidden");
+            }
+
             allowed.forEach((v, index) => {
                 const btn = document.createElement("button");
-                btn.className = "w-full text-left p-3 rounded-lg font-bold bg-slate-700 hover:bg-slate-600 transition mb-1 text-sm";
+                btn.className = "w-full text-left p-3 rounded-lg font-bold bg-slate-700 hover:bg-slate-600 transition text-xs md:text-sm shrink-0 min-h-0 mb-1";
                 btn.innerText = v.name;
-                btn.onclick = () => switchView(v.id);
+                btn.onclick = () => {
+                    switchView(v.id);
+                    if (window.innerWidth < 768) nav.classList.add("hidden");
+                };
                 nav.appendChild(btn);
                 if (index === 0) switchView(v.id);
             });
         }
 
         function switchView(viewId) {
-            ["Pedido", "Caja", "Cocina", "Reportes", "Admin"].forEach(v => {
+            ["Pedido", "Caja", "Cocina", "Reportes", "Respaldos", "Admin"].forEach(v => {
                 document.getElementById(`view${v}`).classList.add("hidden");
             });
             document.getElementById(`view${viewId}`).classList.remove("hidden");
@@ -420,6 +501,30 @@
             if (viewId === "Cocina") renderCocina();
             if (viewId === "Reportes") renderReports();
             if (viewId === "Admin") renderAdminConfig();
+        }
+
+        function openFacturaModal() {
+            document.getElementById("facturaModal").classList.remove("hidden");
+        }
+
+        function closeFacturaModal() {
+            document.getElementById("facturaModal").classList.add("hidden");
+        }
+
+        function saveFacturaData() {
+            const ruc = document.getElementById("modalFactRuc").value.trim();
+            const razon = document.getElementById("modalFactRazon").value.trim();
+            const dir = document.getElementById("modalFactDir").value.trim();
+            const phone = document.getElementById("modalFactPhone").value.trim();
+            const email = document.getElementById("modalFactEmail").value.trim();
+
+            if (!ruc || !razon) {
+                return alert("Para facturación se requiere al menos RUC/Cédula y Razón Social.");
+            }
+
+            tempFacturaData = { ruc, razon, dir: dir || "N/A", phone: phone || "N/A", email: email || "N/A" };
+            document.getElementById("facturaBadge").classList.remove("hidden");
+            closeFacturaModal();
         }
 
         function renderCatalog() {
@@ -441,11 +546,11 @@
                     prods = prods.filter(p => p.categoria === catSelect.value);
                 }
                 catalogGrid.innerHTML = prods.map(p => `
-                    <div class="card p-3 flex flex-col justify-between items-center text-center">
-                        ${p.imagen ? `<img src="${p.imagen}" class="w-full h-24 object-cover rounded-lg mb-2 border border-slate-700">` : `<div class="w-full h-24 bg-slate-800 rounded-lg flex items-center justify-center text-2xl mb-2 text-slate-600">🍔</div>`}
-                        <div class="font-bold text-sm mb-1">${p.nombre}</div>
-                        <div class="text-emerald-400 font-bold mb-2">$${p.precio.toFixed(2)}</div>
-                        <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1 px-2 rounded text-xs">Agregar +</button>
+                    <div class="card p-2.5 flex flex-col justify-between items-center text-center">
+                        ${p.imagen ? `<img src="${p.imagen}" class="w-full h-20 md:h-24 object-cover rounded-lg mb-1.5 border border-slate-700">` : `<div class="w-full h-20 md:h-24 bg-slate-800 rounded-lg flex items-center justify-center text-2xl mb-1.5 text-slate-600">🍔</div>`}
+                        <div class="font-bold text-xs md:text-sm mb-1 leading-tight">${p.nombre}</div>
+                        <div class="text-emerald-400 font-bold text-xs md:text-sm mb-1.5">$${p.precio.toFixed(2)}</div>
+                        <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1 px-2 rounded text-xs min-h-0">Agregar +</button>
                     </div>
                 `).join("");
             };
@@ -501,16 +606,17 @@
             container.innerHTML = cart.map((item, idx) => {
                 total += item.precio;
                 return `
-                    <div class="flex justify-between items-center bg-slate-900 p-2 rounded text-xs">
-                        <span class="font-medium">${item.nombre}</span>
-                        <div class="flex items-center gap-2">
+                    <div class="flex justify-between items-center bg-slate-900 p-1.5 md:p-2 rounded text-xs">
+                        <span class="font-medium truncate max-w-[170px]">${item.nombre}</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
                             <span class="text-emerald-400 font-bold">$${item.precio.toFixed(2)}</span>
-                            <button onclick="cart.splice(${idx}, 1); renderCart();" class="text-red-400 hover:text-red-300 font-bold">✕</button>
+                            <button onclick="cart.splice(${idx}, 1); renderCart();" class="text-red-400 hover:text-red-300 font-bold min-h-0 px-1">✕</button>
                         </div>
                     </div>
                 `;
             }).join("");
             document.getElementById("cartTotal").innerText = `$${total.toFixed(2)}`;
+            document.getElementById("mobileCartCount").innerText = `${cart.length} items`;
         }
 
         function submitOrder() {
@@ -518,39 +624,127 @@
             if (!client) return alert("Ingresa el nombre del cliente o mesa.");
             if (cart.length === 0) return alert("El carrito está vacío.");
 
-            const ruc = document.getElementById("factRuc").value.trim();
-            const razon = document.getElementById("factRazon").value.trim();
-            const phone = document.getElementById("factPhone").value.trim();
-            const email = document.getElementById("factEmail").value.trim();
-
             const total = cart.reduce((acc, i) => acc + i.precio, 0);
             const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-            const tx = db.transaction("pedidos", "readwrite");
-            tx.objectStore("pedidos").add({
+            const orderData = {
                 cliente: client,
-                fact_ruc: ruc || "Consumidor Final",
-                fact_razon: razon || client,
-                fact_phone: phone || "N/A",
-                fact_email: email || "N/A",
+                fact_ruc: tempFacturaData ? tempFacturaData.ruc : "Consumidor Final",
+                fact_razon: tempFacturaData ? tempFacturaData.razon : client,
+                fact_dir: tempFacturaData ? tempFacturaData.dir : "N/A",
+                fact_phone: tempFacturaData ? tempFacturaData.phone : "N/A",
+                fact_email: tempFacturaData ? tempFacturaData.email : "N/A",
                 items: JSON.stringify(cart),
                 total: total,
                 estado: "pendiente",
                 mesero: currentUser.nombre,
                 metodo_pago: "Efectivo",
                 fecha_hora: now
-            });
-
-            tx.oncomplete = () => {
-                cart = [];
-                document.getElementById("orderClient").value = "";
-                document.getElementById("factRuc").value = "";
-                document.getElementById("factRazon").value = "";
-                document.getElementById("factPhone").value = "";
-                document.getElementById("factEmail").value = "";
-                renderCart();
-                alert("¡Pedido registrado exitosamente!");
             };
+
+            const tx = db.transaction("pedidos", "readwrite");
+            const req = tx.objectStore("pedidos").add(orderData);
+
+            req.onsuccess = (e) => {
+                const insertedId = e.target.result;
+                imprimirTicketCocina(insertedId, client, cart, currentUser.nombre, now);
+
+                cart = [];
+                tempFacturaData = null;
+                document.getElementById("orderClient").value = "";
+                document.getElementById("modalFactRuc").value = "";
+                document.getElementById("modalFactRazon").value = "";
+                document.getElementById("modalFactDir").value = "";
+                document.getElementById("modalFactPhone").value = "";
+                document.getElementById("modalFactEmail").value = "";
+                document.getElementById("facturaBadge").classList.add("hidden");
+                renderCart();
+            };
+        }
+
+        function reimprimirPedidoPorId(orderId) {
+            const tx = db.transaction("pedidos", "readonly");
+            tx.objectStore("pedidos").get(orderId).onsuccess = (e) => {
+                const p = e.target.result;
+                if(p) {
+                    const items = typeof p.items === 'string' ? JSON.parse(p.items) : p.items;
+                    imprimirTicketCocina(p.id, p.cliente, items, p.mesero, p.fecha_hora, true);
+                } else {
+                    alert("No se encontró el pedido.");
+                }
+            };
+        }
+
+        // --- IMPRESIÓN CON ENCABEZADO "NEW HAVEN PEDIDO" ---
+        function imprimirTicketCocina(orderId, cliente, items, mesero, fechaHora, esReimpresion = false) {
+            const itemsHtml = items.map(item => `
+                <div style="font-size: 15px; font-weight: bold; margin: 6px 0; display: flex;">
+                    <span style="width: 30px;">1x</span>
+                    <span style="flex: 1; word-break: break-word;">${item.nombre}</span>
+                </div>
+            `).join("");
+
+            const ticketHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Ticket #${orderId}</title>
+                    <style>
+                        @page { size: 80mm auto; margin: 0mm; }
+                        body { 
+                            font-family: 'Courier New', Courier, monospace; 
+                            width: 72mm; 
+                            margin: 0 auto; 
+                            padding: 5mm 0;
+                            color: #000;
+                            background: #fff;
+                        }
+                        .text-center { text-align: center; }
+                        .header { border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 8px; }
+                        .title { font-size: 18px; font-weight: bold; margin: 0; }
+                        .subtitle { font-size: 14px; margin: 2px 0; }
+                        .reimpresion { font-size: 13px; font-weight: bold; background: #000; color: #fff; padding: 2px 4px; margin-top: 4px; display: inline-block; }
+                        .meta { font-size: 12px; margin-bottom: 6px; }
+                        .items { border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
+                        .footer { font-size: 11px; text-align: center; margin-top: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header text-center">
+                        <div class="title">🔥 NEW HAVEN PEDIDO 🔥</div>
+                        <div class="subtitle">ORDEN #${orderId}</div>
+                        ${esReimpresion ? '<div class="reimpresion">** REIMPRESIÓN **</div>' : ''}
+                    </div>
+                    <div class="meta">
+                        <div><strong>Mesa/Cliente:</strong> ${cliente}</div>
+                        <div><strong>Atendido por:</strong> ${mesero}</div>
+                        <div><strong>Fecha:</strong> ${fechaHora}</div>
+                    </div>
+                    <div class="items">
+                        <div style="font-size:12px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:4px;"><strong>CANT. DESCRIPCIÓN</strong></div>
+                        ${itemsHtml}
+                    </div>
+                    <div class="footer">*** FIN DE PEDIDO ***</div>
+                    <script>
+                        window.onload = function() {
+                            window.focus();
+                            window.print();
+                            setTimeout(function(){ window.close(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            const printWin = window.open('', '_blank', 'width=400,height=600');
+            if (printWin) {
+                printWin.document.open();
+                printWin.document.write(ticketHTML);
+                printWin.document.close();
+            } else {
+                alert("Por favor permite las ventanas emergentes para imprimir tickets en el navegador.");
+            }
         }
 
         function renderCaja() {
@@ -559,24 +753,26 @@
             tx.objectStore("pedidos").getAll().onsuccess = (e) => {
                 const pending = e.target.result.filter(p => p.estado !== "cobrado" && p.estado !== "anulado");
                 container.innerHTML = pending.map(p => `
-                    <div class="card p-4 space-y-3">
+                    <div class="card p-3 md:p-4 space-y-2.5">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold text-sky-400">Orden #${p.id} - ${p.cliente}</span>
-                            <span class="text-xs text-slate-400">Mesero: ${p.mesero}</span>
+                            <span class="font-bold text-sky-400 text-sm md:text-base">Orden #${p.id} - ${p.cliente}</span>
+                            <span class="text-xs text-slate-400">${p.mesero}</span>
                         </div>
                         <div class="text-xs text-slate-400 bg-slate-900 p-2 rounded space-y-0.5">
                             <div>Razón Social: <span class="text-white font-medium">${p.fact_razon || p.cliente}</span></div>
                             <div>RUC/CI: <span class="text-white font-medium">${p.fact_ruc || 'N/A'}</span></div>
-                            <div>Telf: <span class="text-white font-medium">${p.fact_phone || 'N/A'}</span></div>
-                            <div>Email: <span class="text-white font-medium">${p.fact_email || 'N/A'}</span></div>
+                            <div>Dir: <span class="text-white font-medium">${p.fact_dir || 'N/A'}</span></div>
                         </div>
-                        <div class="text-2xl font-bold text-emerald-400">$${p.total.toFixed(2)}</div>
-                        <select id="payMethod_${p.id}" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white">
+                        <div class="text-xl md:text-2xl font-bold text-emerald-400">$${p.total.toFixed(2)}</div>
+                        <select id="payMethod_${p.id}" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs md:text-sm text-white">
                             <option value="Efectivo">Efectivo</option>
                             <option value="Transf. Banco de Loja">Transf. Banco de Loja</option>
                             <option value="Transf. Banco Pichincha">Transf. Banco Pichincha</option>
                         </select>
-                        <button onclick="processPayment(${p.id})" class="w-full btn-primary py-2 rounded text-sm">💵 COBRAR</button>
+                        <div class="flex gap-2">
+                            <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-700 hover:bg-slate-600 font-bold py-2 rounded text-xs text-white min-h-0">🖨 Ticket</button>
+                            <button onclick="processPayment(${p.id})" class="w-2/3 btn-primary py-2 rounded text-xs md:text-sm min-h-0">💵 COBRAR</button>
+                        </div>
                     </div>
                 `).join("");
             };
@@ -603,12 +799,15 @@
                 container.innerHTML = pending.map(p => {
                     const items = JSON.parse(p.items);
                     return `
-                        <div class="card p-4 border-orange-500 space-y-3">
-                            <div class="font-bold text-orange-400">Orden #${p.id} - ${p.cliente}</div>
-                            <ul class="text-sm space-y-1 bg-slate-900 p-2 rounded">
+                        <div class="card p-3 md:p-4 border-orange-500 space-y-2.5">
+                            <div class="font-bold text-orange-400 text-sm md:text-base">Orden #${p.id} - ${p.cliente}</div>
+                            <ul class="text-xs md:text-sm space-y-1 bg-slate-900 p-2 rounded">
                                 ${items.map(i => `<li>• ${i.nombre}</li>`).join("")}
                             </ul>
-                            <button onclick="markKitchenReady(${p.id})" class="w-full bg-orange-500 hover:bg-orange-600 font-bold py-2 rounded text-sm">✔ MARCAR LISTO</button>
+                            <div class="flex gap-2">
+                                <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-700 hover:bg-slate-600 font-bold py-2 rounded text-xs text-white min-h-0">🖨 Ticket</button>
+                                <button onclick="markKitchenReady(${p.id})" class="w-2/3 bg-orange-500 hover:bg-orange-600 font-bold py-2 rounded text-xs md:text-sm min-h-0">✔ LISTO</button>
+                            </div>
                         </div>
                     `;
                 }).join("");
@@ -645,11 +844,11 @@
                 });
 
                 document.getElementById("paymentBreakdown").innerHTML = Object.keys(methods).length ? Object.entries(methods).map(([method, amt]) => `
-                    <div class="bg-slate-900 p-3 rounded-lg text-center border border-slate-700">
-                        <span class="text-xs text-slate-400 block mb-1">${method}</span>
-                        <span class="text-lg font-bold text-emerald-400">$${amt.toFixed(2)}</span>
+                    <div class="bg-slate-900 p-2.5 rounded-lg text-center border border-slate-700">
+                        <span class="text-xs text-slate-400 block mb-0.5">${method}</span>
+                        <span class="text-base md:text-lg font-bold text-emerald-400">$${amt.toFixed(2)}</span>
                     </div>
-                `).join("") : `<div class="text-slate-500 text-sm">Sin ventas registradas</div>`;
+                `).join("") : `<div class="text-slate-500 text-xs">Sin ventas registradas</div>`;
 
                 document.getElementById("reportTableBody").innerHTML = orders.map(p => {
                     const items = JSON.parse(p.items).map(i => i.nombre).join(", ");
@@ -660,12 +859,16 @@
                             <td class="p-2">${p.mesero}</td>
                             <td class="p-2">${p.fact_razon || p.cliente}</td>
                             <td class="p-2">${p.fact_ruc || 'N/A'}</td>
+                            <td class="p-2">${p.fact_dir || 'N/A'}</td>
                             <td class="p-2">${p.fact_phone || 'N/A'}</td>
                             <td class="p-2">${p.fact_email || 'N/A'}</td>
                             <td class="p-2 text-xs">${items}</td>
                             <td class="p-2">${p.metodo_pago}</td>
                             <td class="p-2 font-bold text-emerald-400">$${p.total.toFixed(2)}</td>
-                            <td class="p-2"><span class="px-2 py-1 text-xs rounded font-bold ${p.estado === 'cobrado' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">${p.estado}</span></td>
+                            <td class="p-2"><span class="px-2 py-0.5 text-xs rounded font-bold ${p.estado === 'cobrado' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">${p.estado}</span></td>
+                            <td class="p-2">
+                                <button onclick="reimprimirPedidoPorId(${p.id})" class="bg-sky-600 hover:bg-sky-700 text-white text-xs px-2 py-1 rounded font-bold min-h-0">🖨 Ticket</button>
+                            </td>
                         </tr>
                     `;
                 }).join("");
@@ -682,12 +885,13 @@
                 let orders = e.target.result;
                 if(dateVal) orders = orders.filter(p => p.fecha_hora.startsWith(dateVal));
 
-                const cobrados = orders.filter(p => p.estado === "cobrado");
-                if (cobrados.length === 0) return alert("No existen ventas cobradas para generar el reporte.");
+                const conFactura = orders.filter(p => p.estado === "cobrado" && p.fact_ruc && p.fact_ruc !== "Consumidor Final");
+
+                if (conFactura.length === 0) return alert("No existen ventas registradas con datos de facturación.");
 
                 doc.setFontSize(18);
                 doc.setTextColor(16, 185, 129);
-                doc.text("⚡ FastFood POS Pro - Reporte Contable de Ventas", 14, 15);
+                doc.text("⚡ New Haven POS Pro - Reporte de Facturación (Contabilidad)", 14, 15);
 
                 doc.setFontSize(10);
                 doc.setTextColor(100);
@@ -695,19 +899,19 @@
                 doc.text(`${fechaTexto} | Generado el: ${new Date().toLocaleString()}`, 14, 22);
 
                 let totalVentas = 0;
-                const rows = cobrados.map(p => {
+                const rows = conFactura.map(p => {
                     totalVentas += p.total;
                     const itemsText = JSON.parse(p.items).map(i => i.nombre).join(", ");
                     return [
-                        `#${p.id}`, p.fecha_hora, p.fact_razon || p.cliente,
-                        p.fact_ruc || 'Consumidor Final', p.fact_phone || 'N/A',
+                        `#${p.id}`, p.fecha_hora, p.fact_razon,
+                        p.fact_ruc, p.fact_dir || 'N/A', p.fact_phone || 'N/A',
                         p.fact_email || 'N/A', itemsText, p.metodo_pago, `$${p.total.toFixed(2)}`
                     ];
                 });
 
                 doc.autoTable({
                     startY: 28,
-                    head: [['ID', 'Fecha/Hora', 'Cliente / Razón Social', 'RUC / Cédula', 'Teléfono', 'Correo', 'Detalle Pedido', 'Forma Pago', 'Total']],
+                    head: [['ID', 'Fecha/Hora', 'Razón Social', 'RUC/CI', 'Dirección', 'Teléfono', 'Correo', 'Detalle Pedido', 'Forma Pago', 'Total']],
                     body: rows,
                     styles: { fontSize: 8, cellPadding: 2 },
                     headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
@@ -717,39 +921,44 @@
                 const finalY = doc.lastAutoTable.finalY + 10;
                 doc.setFontSize(12);
                 doc.setTextColor(0);
-                doc.text(`Total Registros: ${cobrados.length}`, 14, finalY);
-                doc.text(`Monto Total Cobrado: $${totalVentas.toFixed(2)}`, 14, finalY + 6);
+                doc.text(`Total Facturas Registradas: ${conFactura.length}`, 14, finalY);
+                doc.text(`Monto Total Facturado: $${totalVentas.toFixed(2)}`, 14, finalY + 6);
 
-                doc.save(`Reporte_Contadora_${dateVal || 'General'}.pdf`);
+                doc.save(`Reporte_Facturacion_Contadora_${dateVal || 'General'}.pdf`);
             };
         }
 
-        // --- FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN DE INVENTARIO ---
-        function exportarInventarioJSON() {
-            const tx = db.transaction(["productos", "categorias", "salsas"], "readonly");
+        function exportarSistemaCompletoJSON() {
+            const tx = db.transaction(["usuarios", "categorias", "salsas", "productos", "pedidos"], "readonly");
             const backupData = {};
 
-            tx.objectStore("categorias").getAll().onsuccess = (e1) => {
-                backupData.categorias = e1.target.result;
-                tx.objectStore("salsas").getAll().onsuccess = (e2) => {
-                    backupData.salsas = e2.target.result;
-                    tx.objectStore("productos").getAll().onsuccess = (e3) => {
-                        backupData.productos = e3.target.result;
+            tx.objectStore("usuarios").getAll().onsuccess = (e1) => {
+                backupData.usuarios = e1.target.result;
+                tx.objectStore("categorias").getAll().onsuccess = (e2) => {
+                    backupData.categorias = e2.target.result;
+                    tx.objectStore("salsas").getAll().onsuccess = (e3) => {
+                        backupData.salsas = e3.target.result;
+                        tx.objectStore("productos").getAll().onsuccess = (e4) => {
+                            backupData.productos = e4.target.result;
+                            tx.objectStore("pedidos").getAll().onsuccess = (e5) => {
+                                backupData.pedidos = e5.target.result;
 
-                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-                        const downloadAnchor = document.createElement('a');
-                        downloadAnchor.setAttribute("href", dataStr);
-                        downloadAnchor.setAttribute("download", `Respaldo_Inventario_POS_${new Date().toISOString().slice(0,10)}.json`);
-                        document.body.appendChild(downloadAnchor);
-                        downloadAnchor.click();
-                        downloadAnchor.remove();
+                                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                                const downloadAnchor = document.createElement('a');
+                                downloadAnchor.setAttribute("href", dataStr);
+                                downloadAnchor.setAttribute("download", `Respaldo_TOTAL_POS_${new Date().toISOString().slice(0,10)}.json`);
+                                document.body.appendChild(downloadAnchor);
+                                downloadAnchor.click();
+                                downloadAnchor.remove();
+                            };
+                        };
                     };
                 };
             };
         }
 
-        function importarInventarioJSON() {
-            const fileInput = document.getElementById("importFile");
+        function importarSistemaCompletoJSON() {
+            const fileInput = document.getElementById("importFileFull");
             const file = fileInput.files[0];
             if (!file) return alert("Por favor, selecciona un archivo .json de respaldo.");
 
@@ -757,38 +966,34 @@
             reader.onload = (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (!data.productos || !data.categorias) {
-                        return alert("El archivo no tiene la estructura correcta de inventario.");
+                    if (!data.productos || !data.categorias || !data.usuarios) {
+                        return alert("El archivo no contiene un respaldo válido.");
                     }
 
-                    if (!confirm("Esta acción reemplazará las categorías, salsas y productos actuales. ¿Deseas continuar?")) return;
+                    if (!confirm("⚠️ ATENCIÓN: Esta acción sobrescribirá TODOS los usuarios, productos e historial. ¿Deseas continuar?")) return;
 
-                    const tx = db.transaction(["productos", "categorias", "salsas"], "readwrite");
+                    const tx = db.transaction(["usuarios", "categorias", "salsas", "productos", "pedidos"], "readwrite");
                     
-                    // Limpiar datos actuales
+                    tx.objectStore("usuarios").clear();
                     tx.objectStore("categorias").clear();
                     tx.objectStore("salsas").clear();
                     tx.objectStore("productos").clear();
+                    tx.objectStore("pedidos").clear();
 
-                    // Insertar nuevos datos
-                    data.categorias.forEach(c => tx.objectStore("categorias").add({ nombre: c.nombre }));
-                    if (data.salsas) data.salsas.forEach(s => tx.objectStore("salsas").add({ nombre: s.nombre }));
-                    data.productos.forEach(p => tx.objectStore("productos").add({
-                        nombre: p.nombre,
-                        precio: p.precio,
-                        categoria: p.categoria,
-                        requiere_salsa: p.requiere_salsa,
-                        imagen: p.imagen || ""
-                    }));
+                    if (data.usuarios) data.usuarios.forEach(u => tx.objectStore("usuarios").add(u));
+                    if (data.categorias) data.categorias.forEach(c => tx.objectStore("categorias").add(c));
+                    if (data.salsas) data.salsas.forEach(s => tx.objectStore("salsas").add(s));
+                    if (data.productos) data.productos.forEach(p => tx.objectStore("productos").add(p));
+                    if (data.pedidos) data.pedidos.forEach(p => tx.objectStore("pedidos").add(p));
 
                     tx.oncomplete = () => {
-                        alert("¡Inventario e Secciones importados exitosamente!");
+                        alert("¡Respaldo Total restaurado con éxito!");
                         fileInput.value = "";
-                        renderAdminConfig();
+                        location.reload();
                     };
 
                 } catch (err) {
-                    alert("Ocurrió un error al leer el archivo JSON.");
+                    alert("Ocurrió un error al procesar el archivo JSON.");
                 }
             };
             reader.readAsText(file);
@@ -801,7 +1006,6 @@
             renderProductsTable();
         }
 
-        // --- GESTIÓN DE PRODUCTOS ---
         function renderProductsTable() {
             const table = document.getElementById("productsTableBody");
             const catSelect = document.getElementById("newProdCategory");
@@ -818,13 +1022,13 @@
                 table.innerHTML = prods.map(p => `
                     <tr>
                         <td class="p-2">
-                            ${p.imagen ? `<img src="${p.imagen}" class="w-10 h-10 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}
+                            ${p.imagen ? `<img src="${p.imagen}" class="w-8 h-8 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}
                         </td>
                         <td class="p-2 font-bold">${p.nombre}</td>
                         <td class="p-2 text-emerald-400 font-bold">$${p.precio.toFixed(2)}</td>
-                        <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs">${p.categoria}</span></td>
+                        <td class="p-2"><span class="bg-slate-700 px-1.5 py-0.5 rounded text-xs">${p.categoria}</span></td>
                         <td class="p-2">${p.requiere_salsa ? '✅ Sí' : '❌ No'}</td>
-                        <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
+                        <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button></td>
                     </tr>
                 `).join("");
             };
@@ -880,7 +1084,6 @@
             tx.oncomplete = () => renderProductsTable();
         }
 
-        // --- GESTIÓN DE USUARIOS ---
         function renderUsersTable() {
             const table = document.getElementById("usersTableBody");
             const tx = db.transaction("usuarios", "readonly");
@@ -890,8 +1093,8 @@
                     <tr>
                         <td class="p-2">${u.nombre}</td>
                         <td class="p-2">${u.usuario}</td>
-                        <td class="p-2"><span class="bg-slate-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
-                        <td class="p-2"><button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button></td>
+                        <td class="p-2"><span class="bg-slate-700 px-1.5 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
+                        <td class="p-2"><button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button></td>
                     </tr>
                 `).join("");
             };
@@ -903,7 +1106,7 @@
             const pass = document.getElementById("newPassword").value.trim();
             const role = document.getElementById("newRole").value;
 
-            if(!name || !username || !pass) return alert("Completa todos los campos de usuario.");
+            if(!name || !username || !pass) return alert("Completa todos los campos.");
 
             const tx = db.transaction("usuarios", "readwrite");
             tx.objectStore("usuarios").add({ usuario: username, clave: pass, nombre: name, rol: role });
@@ -924,7 +1127,6 @@
             tx.oncomplete = () => renderUsersTable();
         }
 
-        // --- GESTIÓN DE CATEGORÍAS ---
         function renderCategoriesList() {
             const list = document.getElementById("catList");
             const tx = db.transaction("categorias", "readonly");
@@ -933,7 +1135,7 @@
                 list.innerHTML = cats.map(c => `
                     <li class="py-2 flex justify-between items-center">
                         <span>${c.nombre}</span>
-                        <button onclick="deleteCategory(${c.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button>
+                        <button onclick="deleteCategory(${c.id})" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button>
                     </li>
                 `).join("");
             };
@@ -961,7 +1163,6 @@
             };
         }
 
-        // --- GESTIÓN DE SALSAS ---
         function renderSaucesList() {
             const list = document.getElementById("sauceList");
             const tx = db.transaction("salsas", "readonly");
@@ -970,7 +1171,7 @@
                 list.innerHTML = sauces.map(s => `
                     <li class="py-2 flex justify-between items-center">
                         <span>${s.nombre}</span>
-                        <button onclick="deleteSauce(${s.id})" class="text-red-400 hover:text-red-300 font-bold text-xs">Eliminar</button>
+                        <button onclick="deleteSauce(${s.id})" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button>
                     </li>
                 `).join("");
             };
