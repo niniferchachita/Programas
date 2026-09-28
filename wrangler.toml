@@ -1,0 +1,8 @@
+name = "comi-rap-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "comi_rap_db"
+database_id = "8ff65f0e-61fb-4353-878b-6fab182c55d1"
