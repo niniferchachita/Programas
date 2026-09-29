@@ -90,26 +90,20 @@
         </aside>
 
         <main class="flex-1 p-3 md:p-6 overflow-y-auto">
-            <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR -->
+            <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR (CARRITO ARRIBA, MENÚ DE PRODUCTOS DEBAJO) -->
             <section id="viewPedido" class="hidden space-y-4">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="lg:col-span-2 space-y-3">
-                        <div class="card p-3 flex items-center gap-2">
-                            <label class="font-bold text-xs shrink-0 text-slate-700">📁 Sección:</label>
-                            <select id="filterCategory" onchange="renderCatalog()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-800 text-xs focus:outline-none"></select>
-                        </div>
-                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
-                    </div>
-
-                    <!-- CARRITO Y RESUMEN -->
-                    <div class="card p-4 flex flex-col h-full space-y-3">
+                <div class="flex flex-col gap-4">
+                    <!-- CARRITO Y RESUMEN (ARRIBA) -->
+                    <div class="card p-4 flex flex-col space-y-3">
                         <h3 class="font-black text-sm md:text-base flex justify-between items-center text-slate-900 uppercase">
                             <span id="orderTitle">Orden del Cliente</span>
                             <span id="mobileCartCount" class="text-xs bg-red-100 text-red-600 px-2.5 py-0.5 rounded-full font-bold">0 items</span>
                         </h3>
-                        <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800">
                         
-                        <button onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2.5 rounded-xl flex items-center justify-center gap-1 min-h-0">📄 Datos de Factura</button>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800">
+                            <button onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2.5 rounded-xl flex items-center justify-center gap-1 min-h-0">📄 Datos de Factura</button>
+                        </div>
                         <div id="facturaBadge" class="hidden text-xs text-emerald-600 font-bold bg-emerald-50 p-1.5 rounded-lg text-center border border-emerald-200">✅ Datos cargados</div>
 
                         <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
@@ -121,15 +115,24 @@
                             <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold p-1.5 rounded-lg min-h-0">Agregar Item</button>
                         </div>
 
-                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 my-2 pr-1 min-h-[120px] max-h-[220px]"></div>
+                        <div id="cartItems" class="overflow-y-auto space-y-1.5 my-2 pr-1 min-h-[100px] max-h-[200px]"></div>
 
-                        <div class="border-t border-slate-200 pt-3 mt-auto">
-                            <div class="flex justify-between items-center text-lg font-black text-slate-900 mb-3">
+                        <div class="border-t border-slate-200 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex justify-between items-center gap-4 text-lg font-black text-slate-900">
                                 <span>TOTAL:</span>
                                 <span id="cartTotal" class="text-red-600">$0.00</span>
                             </div>
-                            <button onclick="submitOrder()" class="w-full btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">🚀 ENVIAR PEDIDO</button>
+                            <button onclick="submitOrder()" class="w-full sm:w-auto sm:px-8 btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">🚀 ENVIAR PEDIDO</button>
                         </div>
+                    </div>
+
+                    <!-- MENÚ DE PRODUCTOS Y CATÁLOGO (DEBAJO DE LA ORDEN) -->
+                    <div class="space-y-3">
+                        <div class="card p-3 flex items-center gap-2">
+                            <label class="font-bold text-xs shrink-0 text-slate-700">📁 Sección:</label>
+                            <select id="filterCategory" onchange="renderCatalog()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-800 text-xs focus:outline-none"></select>
+                        </div>
+                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
                     </div>
                 </div>
             </section>
