@@ -354,10 +354,10 @@
                 document.getElementById("btnMobileMenu").classList.add("hidden");
 
                 if (mesaParam.toLowerCase() !== 'qr') {
-                    document.getElementById("orderClient").value = `Mesa ${mesaParam}`;
-                    document.getElementById("userBadge").innerText = `📱 Mesa ${mesaParam}`;
+                    document.getElementById("orderClient").value = "Mesa " + mesaParam;
+                    document.getElementById("userBadge").innerText = "📱 Mesa " + mesaParam;
                 } else {
-                    document.getElementById("userBadge").innerText = `📱 Pedido QR`;
+                    document.getElementById("userBadge").innerText = "📱 Pedido QR";
                 }
 
                 document.getElementById("orderTitle").innerText = "✨ Tu Orden";
@@ -425,7 +425,7 @@
 
         async function apiFetch(endpoint, options = {}) {
             try {
-                const res = await fetch(`${API_URL}${endpoint}`, options);
+                const res = await fetch(API_URL + endpoint, options);
                 return await res.json();
             } catch (e) {
                 console.error("API Error:", e);
@@ -448,7 +448,7 @@
                     document.getElementById("appScreen").classList.remove("hidden");
                     document.getElementById("userInfo").classList.remove("hidden");
                     document.getElementById("btnMobileMenu").classList.remove("hidden");
-                    document.getElementById("userBadge").innerText = `${user.nombre} (${user.rol.toUpperCase()})`;
+                    document.getElementById("userBadge").innerText = user.nombre + " (" + user.rol.toUpperCase() + ")";
                     setupNavigation();
                     return;
                 }
@@ -529,9 +529,9 @@
 
         function switchView(viewId) {
             ["Pedido", "Caja", "Cocina", "Reportes", "Admin"].forEach(v => {
-                document.getElementById(`view${v}`).classList.add("hidden");
+                document.getElementById("view" + v).classList.add("hidden");
             });
-            document.getElementById(`view${viewId}`).classList.remove("hidden");
+            document.getElementById("view" + viewId).classList.remove("hidden");
 
             if (viewId === "Pedido") renderCatalog();
             if (viewId === "Caja") renderCaja();
@@ -552,7 +552,7 @@
 
             if (!ruc || !razon) return alert("Para facturación se requiere al menos RUC/Cédula y Razón Social.");
 
-            tempFacturaData = { ruc, razon, dir: dir || "N/A", phone: phone || "N/A", email: email || "N/A" };
+            tempFacturaData = { ruc: ruc, razon: razon, dir: dir || "N/A", phone: phone || "N/A", email: email || "N/A" };
             document.getElementById("facturaBadge").classList.remove("hidden");
             closeFacturaModal();
         }
@@ -563,35 +563,38 @@
 
             const cats = await apiFetch("/categorias") || [];
             const currentVal = catSelect.value;
-            catSelect.innerHTML = `<option value="Todas">Todas</option>` + cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+            catSelect.innerHTML = '<option value="Todas">Todas</option>' + cats.map(c => '<option value="' + c.nombre + '">' + c.nombre + '</option>').join("");
             if(currentVal) catSelect.value = currentVal;
 
             let prods = await apiFetch("/productos") || [];
             if(catSelect.value && catSelect.value !== "Todas") {
                 prods = prods.filter(p => p.categoria === catSelect.value);
             }
-            catalogGrid.innerHTML = prods.map(p => `
-                <div class="card p-2.5 flex flex-col justify-between items-center text-center">
-                    ${p.imagen ? `<img src="${p.imagen}" class="w-full aspect-video object-cover rounded-lg mb-1.5 border border-slate-200">` : `<div class="w-full aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-xl mb-1.5 text-slate-400">🍔</div>`}
-                    <div class="font-black text-xs mb-0.5 leading-tight text-slate-900">${p.nombre}</div>
-                    ${p.descripcion ? `<div class="text-[10px] text-slate-500 mb-1 leading-snug line-clamp-2 font-medium">${p.descripcion}</div>` : ''}
-                    <div class="text-red-600 font-black text-xs mb-1.5">$${p.precio.toFixed(2)}</div>
-                    <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1.5 px-2 rounded-lg text-xs min-h-0">Agregar +</button>
-                </div>
-            `).join("");
+            catalogGrid.innerHTML = prods.map(p => {
+                const imgHtml = p.imagen ? '<img src="' + p.imagen + '" class="w-full aspect-video object-cover rounded-lg mb-1.5 border border-slate-200">' : '<div class="w-full aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-xl mb-1.5 text-slate-400">🍔</div>';
+                const descHtml = p.descripcion ? '<div class="text-[10px] text-slate-500 mb-1 leading-snug line-clamp-2 font-medium">' + p.descripcion + '</div>' : '';
+                
+                return '<div class="card p-2.5 flex flex-col justify-between items-center text-center">' +
+                    imgHtml +
+                    '<div class="font-black text-xs mb-0.5 leading-tight text-slate-900">' + p.nombre + '</div>' +
+                    descHtml +
+                    '<div class="text-red-600 font-black text-xs mb-1.5">$' + p.precio.toFixed(2) + '</div>' +
+                    '<button onclick="handleAddToCart(' + p.id + ', \'' + p.nombre + '\', ' + p.precio + ', ' + p.requiere_salsa + ')" class="w-full btn-primary py-1.5 px-2 rounded-lg text-xs min-h-0">Agregar +</button>' +
+                '</div>';
+            }).join("");
         }
 
         async function handleAddToCart(id, nombre, precio, requiereSalsa) {
             if (requiereSalsa) {
-                currentModalItem = { id, nombre, precio };
-                document.getElementById("modalTitle").innerText = `Opciones para: ${nombre}`;
+                currentModalItem = { id: id, nombre: nombre, precio: precio };
+                document.getElementById("modalTitle").innerText = "Opciones para: " + nombre;
                 const salsas = await apiFetch("/salsas") || [];
                 
                 const select1 = document.getElementById("modalSauceSelect1");
                 const select2 = document.getElementById("modalSauceSelect2");
 
-                select1.innerHTML = salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
-                select2.innerHTML = `<option value="">-- Ninguna (Solo 1 salsa) --</option>` + salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
+                select1.innerHTML = salsas.map(s => '<option value="' + s.nombre + '">' + s.nombre + '</option>').join("");
+                select2.innerHTML = '<option value="">-- Ninguna (Solo 1 salsa) --</option>' + salsas.map(s => '<option value="' + s.nombre + '">' + s.nombre + '</option>').join("");
 
                 document.getElementById("sauceModal").classList.remove("hidden");
             } else {
@@ -608,11 +611,11 @@
 
             let saucesText = sauce1;
             if (sauce2 && sauce2 !== sauce1) {
-                saucesText += ` + ${sauce2}`;
+                saucesText += " + " + sauce2;
             }
 
-            let name = `${currentModalItem.nombre} [${saucesText}]`;
-            if (note) name += ` (${note})`;
+            let name = currentModalItem.nombre + " [" + saucesText + "]";
+            if (note) name += " (" + note + ")";
             
             addItemToCart(name, currentModalItem.precio);
             document.getElementById("modalNoteInput").value = "";
@@ -623,7 +626,7 @@
             const desc = document.getElementById("customItemDesc").value.trim();
             const price = parseFloat(document.getElementById("customItemPrice").value);
             if (desc && !isNaN(price) && price > 0) {
-                addItemToCart(`⭐ ${desc}`, price);
+                addItemToCart("⭐ " + desc, price);
                 document.getElementById("customItemDesc").value = "";
                 document.getElementById("customItemPrice").value = "";
             }
@@ -633,10 +636,10 @@
             const existingIndex = cart.findIndex(item => item.nombre === nombre);
             if (existingIndex > -1) {
                 cart[existingIndex].cantidad += 1;
-                const [item] = cart.splice(existingIndex, 1);
+                const item = cart.splice(existingIndex, 1)[0];
                 cart.unshift(item);
             } else {
-                cart.unshift({ nombre, precio, cantidad: 1 });
+                cart.unshift({ nombre: nombre, precio: precio, cantidad: 1 });
             }
             renderCart();
         }
@@ -658,27 +661,25 @@
                 const subtotal = item.precio * item.cantidad;
                 total += subtotal;
                 totalItems += item.cantidad;
-                return `
-                    <div class="flex justify-between items-center bg-slate-100 p-2 rounded-lg text-xs border border-slate-200">
-                        <div class="flex flex-col max-w-[130px]">
-                            <span class="font-bold text-slate-800 truncate">${item.nombre}</span>
-                            <span class="text-[10px] text-slate-500 font-semibold">$${item.precio.toFixed(2)} c/u</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <div class="flex items-center bg-white border border-slate-300 rounded-md">
-                                <button onclick="updateCartQuantity(${idx}, -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>
-                                <span class="px-1.5 font-black text-slate-900 text-xs">${item.cantidad}</span>
-                                <button onclick="updateCartQuantity(${idx}, 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>
-                            </div>
-                            <span class="text-red-600 font-black min-w-[45px] text-right">$${subtotal.toFixed(2)}</span>
-                            <button onclick="cart.splice(${idx}, 1); renderCart();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1">✕</button>
-                        </div>
-                    </div>
-                `;
+                return '<div class="flex justify-between items-center bg-slate-100 p-2 rounded-lg text-xs border border-slate-200">' +
+                    '<div class="flex flex-col max-w-[130px]">' +
+                        '<span class="font-bold text-slate-800 truncate">' + item.nombre + '</span>' +
+                        '<span class="text-[10px] text-slate-500 font-semibold">$' + item.precio.toFixed(2) + ' c/u</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-1.5 shrink-0">' +
+                        '<div class="flex items-center bg-white border border-slate-300 rounded-md">' +
+                            '<button onclick="updateCartQuantity(' + idx + ', -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>' +
+                            '<span class="px-1.5 font-black text-slate-900 text-xs">' + item.cantidad + '</span>' +
+                            '<button onclick="updateCartQuantity(' + idx + ', 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>' +
+                        '</div>' +
+                        '<span class="text-red-600 font-black min-w-[45px] text-right">$' + subtotal.toFixed(2) + '</span>' +
+                        '<button onclick="cart.splice(' + idx + ', 1); renderCart();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1">✕</button>' +
+                    '</div>' +
+                '</div>';
             }).join("");
 
-            document.getElementById("cartTotal").innerText = `$${total.toFixed(2)}`;
-            document.getElementById("mobileCartCount").innerText = `${totalItems} items`;
+            document.getElementById("cartTotal").innerText = "$" + total.toFixed(2);
+            document.getElementById("mobileCartCount").innerText = totalItems + " items";
         }
 
         async function submitOrder() {
@@ -690,7 +691,7 @@
             const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
             const meseroNombre = isCustomerMode ? "📱 Cliente QR" : currentUser.nombre;
-            const clienteFinal = isCustomerMode ? `[QR] ${client}` : client;
+            const clienteFinal = isCustomerMode ? "[QR] " + client : client;
 
             const orderData = {
                 cliente: clienteFinal,
@@ -738,61 +739,28 @@
             }
         }
 
-        function imprimirTicketCocina(orderId, cliente, items, mesero, fechaHora, esReimpresion = false) {
-            const logoHtml = currentGlobalLogo ? `<img src="${currentGlobalLogo}" style="max-width: 100px; max-height: 50px; margin: 0 auto 5px auto; display: block; object-fit: contain;">` : '';
+        function imprimirTicketCocina(orderId, cliente, items, mesero, fechaHora, esReimpresion) {
+            if (typeof esReimpresion === "undefined") esReimpresion = false;
+            const logoHtml = currentGlobalLogo ? '<img src="' + currentGlobalLogo + '" style="max-width: 100px; max-height: 50px; margin: 0 auto 5px auto; display: block; object-fit: contain;">' : '';
 
             const itemsHtml = items.map(item => {
                 const qty = item.cantidad || 1;
-                return `
-                    <div style="font-size: 15px; font-weight: bold; margin: 6px 0; display: flex;">
-                        <span style="width: 35px;">${qty}x</span>
-                        <span style="flex: 1; word-break: break-word;">${item.nombre}</span>
-                    </div>
-                `;
+                return '<div style="font-size: 15px; font-weight: bold; margin: 6px 0; display: flex;">' +
+                    '<span style="width: 35px;">' + qty + 'x</span>' +
+                    '<span style="flex: 1; word-break: break-word;">' + item.nombre + '</span>' +
+                '</div>';
             }).join("");
 
-            const ticketHTML = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Ticket #${orderId}</title>
-                    <style>
-                        @page { size: 80mm auto; margin: 0mm; }
-                        body { font-family: 'Courier New', Courier, monospace; width: 72mm; margin: 0 auto; padding: 5mm 0; color: #000; background: #fff; }
-                        .text-center { text-align: center; }
-                        .header { border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 8px; }
-                        .title { font-size: 18px; font-weight: bold; margin: 0; }
-                        .subtitle { font-size: 14px; margin: 2px 0; }
-                        .reimpresion { font-size: 13px; font-weight: bold; background: #000; color: #fff; padding: 2px 4px; margin-top: 4px; display: inline-block; }
-                        .meta { font-size: 12px; margin-bottom: 6px; }
-                        .items { border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
-                        .footer { font-size: 11px; text-align: center; margin-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header text-center">
-                        ${logoHtml}
-                        <div class="title">🔥 NEW HAVEN PEDIDO 🔥</div>
-                        <div class="subtitle">ORDEN #${orderId}</div>
-                        ${esReimpresion ? '<div class="reimpresion">** REIMPRESIÓN **</div>' : ''}
-                    </div>
-                    <div class="meta">
-                        <div><strong>Mesa/Cliente:</strong> ${cliente}</div>
-                        <div><strong>Atendido por:</strong> ${mesero}</div>
-                        <div><strong>Fecha:</strong> ${fechaHora}</div>
-                    </div>
-                    <div class="items">
-                        <div style="font-size:12px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:4px;"><strong>CANT. DESCRIPCIÓN</strong></div>
-                        ${itemsHtml}
-                    </div>
-                    <div class="footer">*** FIN DE PEDIDO ***</div>
-                    <script>
-                        window.onload = function() { window.focus(); window.print(); setTimeout(function(){ window.close(); }, 500); };
-                    <\/script>
-                </body>
-                </html>
-            `;
+            const ticketHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #' + orderId + '</title>' +
+                '<style>@page { size: 80mm auto; margin: 0mm; } body { font-family: "Courier New", Courier, monospace; width: 72mm; margin: 0 auto; padding: 5mm 0; color: #000; background: #fff; } .text-center { text-align: center; } .header { border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 8px; } .title { font-size: 18px; font-weight: bold; margin: 0; } .subtitle { font-size: 14px; margin: 2px 0; } .reimpresion { font-size: 13px; font-weight: bold; background: #000; color: #fff; padding: 2px 4px; margin-top: 4px; display: inline-block; } .meta { font-size: 12px; margin-bottom: 6px; } .items { border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px; } .footer { font-size: 11px; text-align: center; margin-top: 10px; }</style>' +
+                '</head><body>' +
+                '<div class="header text-center">' + logoHtml + '<div class="title">🔥 NEW HAVEN PEDIDO 🔥</div><div class="subtitle">ORDEN #' + orderId + '</div>' +
+                (esReimpresion ? '<div class="reimpresion">** REIMPRESIÓN **</div>' : '') +
+                '</div><div class="meta"><div><strong>Mesa/Cliente:</strong> ' + cliente + '</div><div><strong>Atendido por:</strong> ' + mesero + '</div><div><strong>Fecha:</strong> ' + fechaHora + '</div></div>' +
+                '<div class="items"><div style="font-size:12px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:4px;"><strong>CANT. DESCRIPCIÓN</strong></div>' + itemsHtml + '</div>' +
+                '<div class="footer">*** FIN DE PEDIDO ***</div>' +
+                '<script>window.onload = function() { window.focus(); window.print(); setTimeout(function(){ window.close(); }, 500); };<\/script>' +
+                '</body></html>';
 
             const printWin = window.open('', '_blank', 'width=400,height=600');
             if (printWin) {
@@ -809,34 +777,34 @@
             const orders = await apiFetch("/pedidos") || [];
             const pending = orders.filter(p => p.estado !== "cobrado" && p.estado !== "anulado");
             
-            container.innerHTML = pending.map(p => `
-                <div class="card p-3 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="font-black text-sky-600 text-sm">Orden #${p.id} - ${p.cliente}</span>
-                        <span class="text-[11px] text-slate-500 font-bold">${p.mesero}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg space-y-0.5 border border-slate-200">
-                        <div>Razón Social: <span class="text-slate-900 font-bold">${p.fact_razon || p.cliente}</span></div>
-                        <div>RUC/CI: <span class="text-slate-900 font-bold">${p.fact_ruc || 'N/A'}</span></div>
-                        <div>Dir: <span class="text-slate-900 font-bold">${p.fact_dir || 'N/A'}</span></div>
-                    </div>
-                    <div class="text-xl font-black text-slate-900">$${p.total.toFixed(2)}</div>
-                    <select id="payMethod_${p.id}" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transf. Banco de Loja">Transf. Banco de Loja</option>
-                        <option value="Transf. Banco Pichincha">Transf. Banco Pichincha</option>
-                    </select>
-                    <div class="flex gap-2">
-                        <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>
-                        <button onclick="processPayment(${p.id})" class="w-2/3 btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>
-                    </div>
-                </div>
-            `).join("");
+            container.innerHTML = pending.map(p => {
+                return '<div class="card p-3 space-y-2">' +
+                    '<div class="flex justify-between items-center">' +
+                        '<span class="font-black text-sky-600 text-sm">Orden #' + p.id + ' - ' + p.cliente + '</span>' +
+                        '<span class="text-[11px] text-slate-500 font-bold">' + p.mesero + '</span>' +
+                    '</div>' +
+                    '<div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg space-y-0.5 border border-slate-200">' +
+                        '<div>Razón Social: <span class="text-slate-900 font-bold">' + (p.fact_razon || p.cliente) + '</span></div>' +
+                        '<div>RUC/CI: <span class="text-slate-900 font-bold">' + (p.fact_ruc || 'N/A') + '</span></div>' +
+                        '<div>Dir: <span class="text-slate-900 font-bold">' + (p.fact_dir || 'N/A') + '</span></div>' +
+                    '</div>' +
+                    '<div class="text-xl font-black text-slate-900">$' + p.total.toFixed(2) + '</div>' +
+                    '<select id="payMethod_' + p.id + '" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">' +
+                        '<option value="Efectivo">Efectivo</option>' +
+                        '<option value="Transf. Banco de Loja">Transf. Banco de Loja</option>' +
+                        '<option value="Transf. Banco Pichincha">Transf. Banco Pichincha</option>' +
+                    '</select>' +
+                    '<div class="flex gap-2">' +
+                        '<button onclick="reimprimirPedidoPorId(' + p.id + ')" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
+                        '<button onclick="processPayment(' + p.id + ')" class="w-2/3 btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>' +
+                    '</div>' +
+                '</div>';
+            }).join("");
         }
 
         async function processPayment(orderId) {
-            const method = document.getElementById(`payMethod_${orderId}`).value;
-            await apiFetch(`/pedidos/${orderId}`, {
+            const method = document.getElementById("payMethod_" + orderId).value;
+            await apiFetch("/pedidos/" + orderId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ estado: "cobrado", metodo_pago: method })
@@ -851,23 +819,21 @@
 
             container.innerHTML = pending.map(p => {
                 const items = JSON.parse(p.items);
-                return `
-                    <div class="card p-3 border-l-4 border-orange-500 space-y-2">
-                        <div class="font-black text-orange-600 text-sm">Orden #${p.id} - ${p.cliente}</div>
-                        <ul class="text-xs space-y-1 bg-slate-50 p-2 rounded-lg border border-slate-200 font-medium">
-                            ${items.map(i => `<li>• ${i.cantidad \vert{}\vert{} 1}x${i.nombre}</li>`).join("")}
-                        </ul>
-                        <div class="flex gap-2">
-                            <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>
-                            <button onclick="markKitchenReady(${p.id})" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✔ LISTO</button>
-                        </div>
-                    </div>
-                `;
+                return '<div class="card p-3 border-l-4 border-orange-500 space-y-2">' +
+                    '<div class="font-black text-orange-600 text-sm">Orden #' + p.id + ' - ' + p.cliente + '</div>' +
+                    '<ul class="text-xs space-y-1 bg-slate-50 p-2 rounded-lg border border-slate-200 font-medium">' +
+                        items.map(i => '<li>• ' + (i.cantidad || 1) + 'x ' + i.nombre + '</li>').join("") +
+                    '</ul>' +
+                    '<div class="flex gap-2">' +
+                        '<button onclick="reimprimirPedidoPorId(' + p.id + ')" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
+                        '<button onclick="markKitchenReady(' + p.id + ')" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✔ LISTO</button>' +
+                    '</div>' +
+                '</div>';
             }).join("");
         }
 
         async function markKitchenReady(orderId) {
-            await apiFetch(`/pedidos/${orderId}`, {
+            await apiFetch("/pedidos/" + orderId, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ estado: "listo" })
@@ -883,40 +849,38 @@
             const cobrados = orders.filter(p => p.estado === "cobrado");
             const totalVentas = cobrados.reduce((acc, p) => acc + p.total, 0);
 
-            document.getElementById("kpiTotal").innerText = `$${totalVentas.toFixed(2)}`;
+            document.getElementById("kpiTotal").innerText = "$" + totalVentas.toFixed(2);
             document.getElementById("kpiCount").innerText = cobrados.length;
 
             const methods = {};
             cobrados.forEach(p => { methods[p.metodo_pago] = (methods[p.metodo_pago] || 0) + p.total; });
 
-            document.getElementById("paymentBreakdown").innerHTML = Object.keys(methods).length ? Object.entries(methods).map(([method, amt]) => `
-                <div class="bg-slate-50 p-2 rounded-xl text-center border border-slate-200">
-                    <span class="text-[10px] text-slate-500 block mb-0.5 font-bold">${method}</span>
-                    <span class="text-sm font-black text-slate-900">$${amt.toFixed(2)}</span>
-                </div>
-            `).join("") : `<div class="text-slate-400 text-xs">Sin ventas registradas</div>`;
+            document.getElementById("paymentBreakdown").innerHTML = Object.keys(methods).length ? Object.entries(methods).map(([method, amt]) => {
+                return '<div class="bg-slate-50 p-2 rounded-xl text-center border border-slate-200">' +
+                    '<span class="text-[10px] text-slate-500 block mb-0.5 font-bold">' + method + '</span>' +
+                    '<span class="text-sm font-black text-slate-900">$' + amt.toFixed(2) + '</span>' +
+                '</div>';
+            }).join("") : '<div class="text-slate-400 text-xs">Sin ventas registradas</div>';
 
             document.getElementById("reportTableBody").innerHTML = orders.map(p => {
                 const itemsObj = JSON.parse(p.items);
-                const itemsFormatted = itemsObj.map(i => `${i.cantidad || 1}x ${i.nombre}`).join(", ");
+                const itemsFormatted = itemsObj.map(i => (i.cantidad || 1) + 'x ' + i.nombre).join(", ");
 
-                return `
-                    <tr>
-                        <td class="p-2 font-bold">#${p.id}</td>
-                        <td class="p-2 text-[11px] text-slate-500">${p.fecha_hora}</td>
-                        <td class="p-2">${p.mesero}</td>
-                        <td class="p-2">${p.fact_razon || p.cliente}</td>
-                        <td class="p-2">${p.fact_ruc || 'N/A'}</td>
-                        <td class="p-2">${p.fact_dir || 'N/A'}</td>
-                        <td class="p-2">${p.fact_phone || 'N/A'}</td>
-                        <td class="p-2">${p.fact_email || 'N/A'}</td>
-                        <td class="p-2 text-[11px] font-medium">${itemsFormatted}</td>
-                        <td class="p-2">${p.metodo_pago}</td>
-                        <td class="p-2 font-black text-emerald-600">$${p.total.toFixed(2)}</td>
-                        <td class="p-2"><span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${p.estado === 'cobrado' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}">${p.estado}</span></td>
-                        <td class="p-2"><button onclick="reimprimirPedidoPorId(${p.id})" class="bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg font-bold min-h-0">🖨 Ticket</button></td>
-                    </tr>
-                `;
+                return '<tr>' +
+                    '<td class="p-2 font-bold">#' + p.id + '</td>' +
+                    '<td class="p-2 text-[11px] text-slate-500">' + p.fecha_hora + '</td>' +
+                    '<td class="p-2">' + p.mesero + '</td>' +
+                    '<td class="p-2">' + (p.fact_razon || p.cliente) + '</td>' +
+                    '<td class="p-2">' + (p.fact_ruc || 'N/A') + '</td>' +
+                    '<td class="p-2">' + (p.fact_dir || 'N/A') + '</td>' +
+                    '<td class="p-2">' + (p.fact_phone || 'N/A') + '</td>' +
+                    '<td class="p-2">' + (p.fact_email || 'N/A') + '</td>' +
+                    '<td class="p-2 text-[11px] font-medium">' + itemsFormatted + '</td>' +
+                    '<td class="p-2">' + p.metodo_pago + '</td>' +
+                    '<td class="p-2 font-black text-emerald-600">$' + p.total.toFixed(2) + '</td>' +
+                    '<td class="p-2"><span class="px-2 py-0.5 text-[10px] rounded-full font-bold ' + (p.estado === 'cobrado' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700') + '">' + p.estado + '</span></td>' +
+                    '<td class="p-2"><button onclick="reimprimirPedidoPorId(' + p.id + ')" class="bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg font-bold min-h-0">🖨 Ticket</button></td>' +
+                '</tr>';
             }).join("");
         }
 
@@ -937,19 +901,19 @@
 
             doc.setFontSize(10);
             doc.setTextColor(100);
-            const fechaTexto = dateVal ? `Fecha filtrada: ${dateVal}` : "Todas las fechas";
-            doc.text(`${fechaTexto} | Generado el: ${new Date().toLocaleString()}`, 14, 22);
+            const fechaTexto = dateVal ? "Fecha filtrada: " + dateVal : "Todas las fechas";
+            doc.text(fechaTexto + " | Generado el: " + new Date().toLocaleString(), 14, 22);
 
             let totalVentas = 0;
             const rows = conFactura.map(p => {
                 totalVentas += p.total;
                 const itemsObj = JSON.parse(p.items);
-                const itemsText = itemsObj.map(i => `${i.cantidad || 1}x ${i.nombre}`).join(", ");
+                const itemsText = itemsObj.map(i => (i.cantidad || 1) + 'x ' + i.nombre).join(", ");
 
                 return [
-                    `#${p.id}`, p.fecha_hora, p.fact_razon,
+                    "#" + p.id, p.fecha_hora, p.fact_razon,
                     p.fact_ruc, p.fact_dir || 'N/A', p.fact_phone || 'N/A',
-                    p.fact_email || 'N/A', itemsText, p.metodo_pago, `$${p.total.toFixed(2)}`
+                    p.fact_email || 'N/A', itemsText, p.metodo_pago, "$" + p.total.toFixed(2)
                 ];
             });
 
@@ -965,10 +929,10 @@
             const finalY = doc.lastAutoTable.finalY + 10;
             doc.setFontSize(12);
             doc.setTextColor(0);
-            doc.text(`Total Facturas Registradas: ${conFactura.length}`, 14, finalY);
-            doc.text(`Monto Total Facturado: $${totalVentas.toFixed(2)}`, 14, finalY + 6);
+            doc.text("Total Facturas Registradas: " + conFactura.length, 14, finalY);
+            doc.text("Monto Total Facturado: $" + totalVentas.toFixed(2), 14, finalY + 6);
 
-            doc.save(`Reporte_Facturacion_Contadora_${dateVal || 'General'}.pdf`);
+            doc.save("Reporte_Facturacion_Contadora_" + (dateVal || 'General') + ".pdf");
         }
 
         function renderAdminConfig() {
@@ -981,55 +945,29 @@
         function imprimirCodigosQR() {
             const count = parseInt(document.getElementById("qrTableCount").value) || 10;
             const baseUrl = window.location.origin + window.location.pathname;
-            const logoHtml = currentGlobalLogo ? `<img src="${currentGlobalLogo}" style="max-width: 70px; max-height: 40px; margin: 0 auto 5px auto; display: block; object-fit: contain;">` : '';
+            const logoHtml = currentGlobalLogo ? '<img src="' + currentGlobalLogo + '" style="max-width: 70px; max-height: 40px; margin: 0 auto 5px auto; display: block; object-fit: contain;">' : '';
 
             const printWin = window.open('', '_blank', 'width=800,height=900');
             if (!printWin) return alert("Por favor permite las ventanas emergentes para abrir la hoja de impresión.");
 
             let qrCards = '';
             for (let i = 1; i <= count; i++) {
-                qrCards += `
-                    <div style="border: 2px solid #0f172a; border-radius: 12px; padding: 15px; text-align: center; background: #fff; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        ${logoHtml}
-                        <h2 style="margin: 0 0 3px 0; color: #dc2626; font-size: 16px; font-weight: 900;">⚡ NEW HAVEN POS</h2>
-                        <h1 style="margin: 0 0 8px 0; color: #0f172a; font-size: 22px; font-weight: 900;">MESA ${i}</h1>
-                        <div id="qr_${i}" style="margin: 5px auto; display: flex; justify-content: center;"></div>
-                        <p style="margin: 8px 0 0 0; font-size: 11px; font-weight: 700; color: #475569;">📷 Escanea para ver el menú y hacer tu pedido</p>
-                    </div>
-                `;
+                qrCards += '<div style="border: 2px solid #0f172a; border-radius: 12px; padding: 15px; text-align: center; background: #fff; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
+                    logoHtml +
+                    '<h2 style="margin: 0 0 3px 0; color: #dc2626; font-size: 16px; font-weight: 900;">⚡ NEW HAVEN POS</h2>' +
+                    '<h1 style="margin: 0 0 8px 0; color: #0f172a; font-size: 22px; font-weight: 900;">MESA ' + i + '</h1>' +
+                    '<div id="qr_' + i + '" style="margin: 5px auto; display: flex; justify-content: center;"></div>' +
+                    '<p style="margin: 8px 0 0 0; font-size: 11px; font-weight: 700; color: #475569;">📷 Escanea para ver el menú y hacer tu pedido</p>' +
+                '</div>';
             }
 
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Impresión de Códigos QR para Mesas</title>
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-                    <style>
-                        @page { size: A4; margin: 10mm; }
-                        body { font-family: system-ui, sans-serif; background: #fff; margin: 0; padding: 10px; }
-                        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="grid-container">${qrCards}</div>
-                    <script>
-                        window.onload = function() {
-                            const baseUrl = "${baseUrl}";
-                            const total = ${count};
-                            for (let i = 1; i <= total; i++) {
-                                new QRCode(document.getElementById("qr_" + i), {
-                                    text: baseUrl + "?mesa=" + i,
-                                    width: 130,
-                                    height: 130
-                                });
-                            }
-                            setTimeout(function() { window.print(); }, 800);
-                        };
-                    <\/script>
-                </body>
-                </html>
-            `;
+            const htmlContent = '<!DOCTYPE html><html><head><title>Impresión de Códigos QR para Mesas</title>' +
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+                '<style>@page { size: A4; margin: 10mm; } body { font-family: system-ui, sans-serif; background: #fff; margin: 0; padding: 10px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }</style>' +
+                '</head><body>' +
+                '<div class="grid-container">' + qrCards + '</div>' +
+                '<script>window.onload = function() { const baseUrl = "' + baseUrl + '"; const total = ' + count + '; for (let i = 1; i <= total; i++) { new QRCode(document.getElementById("qr_" + i), { text: baseUrl + "?mesa=" + i, width: 130, height: 130 }); } setTimeout(function() { window.print(); }, 800); };<\/script>' +
+                '</body></html>';
 
             printWin.document.open();
             printWin.document.write(htmlContent);
@@ -1041,20 +979,20 @@
             const catSelect = document.getElementById("newProdCategory");
 
             const cats = await apiFetch("/categorias") || [];
-            catSelect.innerHTML = cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+            catSelect.innerHTML = cats.map(c => '<option value="' + c.nombre + '">' + c.nombre + '</option>').join("");
 
             const prods = await apiFetch("/productos") || [];
-            table.innerHTML = prods.map(p => `
-                <tr>
-                    <td class="p-2">${p.imagen ? `<img src="${p.imagen}" class="w-8 h-8 object-cover rounded-md">` : `<span class="text-xs text-slate-400">Sin Foto</span>`}</td>
-                    <td class="p-2 font-bold">${p.nombre}</td>
-                    <td class="p-2 text-xs text-slate-500">${p.descripcion || '-'}</td>
-                    <td class="p-2 text-red-600 font-black">$${p.precio.toFixed(2)}</td>
-                    <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold">${p.categoria}</span></td>
-                    <td class="p-2">${p.requiere_salsa ? '✅ Sí' : '❌ No'}</td>
-                    <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-600 hover:underline font-bold text-xs min-h-0">Eliminar</button></td>
-                </tr>
-            `).join("");
+            table.innerHTML = prods.map(p => {
+                return '<tr>' +
+                    '<td class="p-2">' + (p.imagen ? '<img src="' + p.imagen + '" class="w-8 h-8 object-cover rounded-md">' : '<span class="text-xs text-slate-400">Sin Foto</span>') + '</td>' +
+                    '<td class="p-2 font-bold">' + p.nombre + '</td>' +
+                    '<td class="p-2 text-xs text-slate-500">' + (p.descripcion || '-') + '</td>' +
+                    '<td class="p-2 text-red-600 font-black">$' + p.precio.toFixed(2) + '</td>' +
+                    '<td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold">' + p.categoria + '</span></td>' +
+                    '<td class="p-2">' + (p.requiere_salsa ? '✅ Sí' : '❌ No') + '</td>' +
+                    '<td class="p-2"><button onclick="deleteProduct(' + p.id + ')" class="text-red-600 hover:underline font-bold text-xs min-h-0">Eliminar</button></td>' +
+                '</tr>';
+            }).join("");
         }
 
         async function addProduct() {
@@ -1095,28 +1033,28 @@
 
         async function deleteProduct(id) {
             if(!confirm("¿Eliminar este producto?")) return;
-            await apiFetch(`/productos/${id}`, { method: "DELETE" });
+            await apiFetch("/productos/" + id, { method: "DELETE" });
             renderProductsTable();
         }
 
         async function renderUsersTable() {
             const table = document.getElementById("usersTableBody");
             const users = await apiFetch("/usuarios") || [];
-            table.innerHTML = users.map(u => `
-                <tr>
-                    <td class="p-2 font-bold">${u.nombre}</td>
-                    <td class="p-2 font-mono text-red-600 font-bold">${u.usuario}</td>
-                    <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
-                    <td class="p-2 flex items-center gap-1.5">
-                        <button onclick="changeUserPassword('${u.usuario}', '${u.nombre}', '${u.rol}')" class="text-sky-600 font-bold text-xs min-h-0 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200">🔑 Clave</button>
-                        <button onclick="deleteUser('${u.usuario}')" class="text-red-600 font-bold text-xs min-h-0 px-1">Eliminar</button>
-                    </td>
-                </tr>
-            `).join("");
+            table.innerHTML = users.map(u => {
+                return '<tr>' +
+                    '<td class="p-2 font-bold">' + u.nombre + '</td>' +
+                    '<td class="p-2 font-mono text-red-600 font-bold">' + u.usuario + '</td>' +
+                    '<td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold uppercase">' + u.rol + '</span></td>' +
+                    '<td class="p-2 flex items-center gap-1.5">' +
+                        '<button onclick="changeUserPassword(\'' + u.usuario + '\', \'' + u.nombre + '\', \'' + u.rol + '\')" class="text-sky-600 font-bold text-xs min-h-0 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200">🔑 Clave</button>' +
+                        '<button onclick="deleteUser(\'' + u.usuario + '\')" class="text-red-600 font-bold text-xs min-h-0 px-1">Eliminar</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join("");
         }
 
         async function changeUserPassword(username, name, role) {
-            const newPass = prompt(`Ingresa la nueva contraseña para el usuario "${username}" (${name}):`);
+            const newPass = prompt("Ingresa la nueva contraseña para el usuario \"" + username + "\" (" + name + "):");
             if (!newPass || !newPass.trim()) return;
 
             await apiFetch("/usuarios", {
@@ -1125,7 +1063,7 @@
                 body: JSON.stringify({ usuario: username, clave: newPass.trim(), nombre: name, rol: role })
             });
 
-            alert(`✅ La contraseña de ${username} ha sido actualizada exitosamente.`);
+            alert("✅ La contraseña de " + username + " ha sido actualizada exitosamente.");
             renderUsersTable();
         }
 
@@ -1150,21 +1088,21 @@
         }
 
         async function deleteUser(username) {
-            if(!confirm(`¿Seguro que deseas eliminar el usuario "${username}"?`)) return;
+            if(!confirm("¿Seguro que deseas eliminar el usuario \"" + username + "\"?")) return;
 
-            await apiFetch(`/usuarios/${username}`, { method: "DELETE" });
+            await apiFetch("/usuarios/" + username, { method: "DELETE" });
             renderUsersTable();
         }
 
         async function renderCategoriesList() {
             const list = document.getElementById("catList");
             const cats = await apiFetch("/categorias") || [];
-            list.innerHTML = cats.map(c => `
-                <li class="py-2 flex justify-between items-center font-medium">
-                    <span>${c.nombre}</span>
-                    <button onclick="deleteCategory(${c.id})" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>
-                </li>
-            `).join("");
+            list.innerHTML = cats.map(c => {
+                return '<li class="py-2 flex justify-between items-center font-medium">' +
+                    '<span>' + c.nombre + '</span>' +
+                    '<button onclick="deleteCategory(' + c.id + ')" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>' +
+                '</li>';
+            }).join("");
         }
 
         async function addCategory() {
@@ -1184,7 +1122,7 @@
 
         async function deleteCategory(id) {
             if(!confirm("¿Eliminar esta sección?")) return;
-            await apiFetch(`/categorias/${id}`, { method: "DELETE" });
+            await apiFetch("/categorias/" + id, { method: "DELETE" });
             renderCategoriesList();
             renderProductsTable();
         }
@@ -1192,12 +1130,12 @@
         async function renderSaucesList() {
             const list = document.getElementById("sauceList");
             const sauces = await apiFetch("/salsas") || [];
-            list.innerHTML = sauces.map(s => `
-                <li class="py-2 flex justify-between items-center font-medium">
-                    <span>${s.nombre}</span>
-                    <button onclick="deleteSauce(${s.id})" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>
-                </li>
-            `).join("");
+            list.innerHTML = sauces.map(s => {
+                return '<li class="py-2 flex justify-between items-center font-medium">' +
+                    '<span>' + s.nombre + '</span>' +
+                    '<button onclick="deleteSauce(' + s.id + ')" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>' +
+                '</li>';
+            }).join("");
         }
 
         async function addSauce() {
@@ -1216,7 +1154,7 @@
 
         async function deleteSauce(id) {
             if(!confirm("¿Eliminar esta salsa o término?")) return;
-            await apiFetch(`/salsas/${id}`, { method: "DELETE" });
+            await apiFetch("/salsas/" + id, { method: "DELETE" });
             renderSaucesList();
         }
     </script>
