@@ -42,27 +42,6 @@
         </div>
     </header>
 
-    <!-- MENÚ LATERAL DESPLEGABLE (OFF-CANVAS DRAWER) CON LOGO -->
-    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col p-4 shadow-2xl md:shadow-none border-r border-slate-200 md:static md:w-64 shrink-0">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0">
-                    <span class="headerLogoFallback text-base">⚡</span>
-                    <img class="headerLogoImg w-full h-full object-cover hidden" src="" alt="Logo">
-                </div>
-                <span class="font-black text-slate-900 text-xs tracking-wider uppercase">New Haven POS</span>
-            </div>
-            <button onclick="toggleMobileMenu()" class="text-slate-500 font-bold text-lg md:hidden">✕</button>
-        </div>
-        <nav id="navContainer" class="flex-1 space-y-2 overflow-y-auto"></nav>
-        <div class="pt-4 border-t border-slate-100 mt-auto">
-            <button onclick="logout()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold p-3 rounded-xl text-xs flex items-center justify-center gap-2 min-h-0">
-                🚪 CERRAR SESIÓN
-            </button>
-            <div class="text-[10px] text-center text-slate-400 font-semibold mt-3">Developed by JM</div>
-        </div>
-    </aside>
-
     <!-- PANTALLA DE LOGIN CON LOGO -->
     <div id="loginScreen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
         <div class="card p-6 md:p-8 w-full max-w-md text-center">
@@ -87,8 +66,29 @@
         </div>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <div id="appScreen" class="flex-1 flex overflow-hidden hidden">
+    <!-- CONTENIDO PRINCIPAL (INCLUYE EL SIDEBAR PARA MOSTRARLO SOLO AL INICIAR SESIÓN) -->
+    <div id="appScreen" class="flex-1 flex overflow-hidden hidden relative">
+        <!-- MENÚ LATERAL DESPLEGABLE (OFF-CANVAS DRAWER) -->
+        <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col p-4 shadow-2xl md:shadow-none border-r border-slate-200 md:static md:w-64 shrink-0">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0">
+                        <span class="headerLogoFallback text-base">⚡</span>
+                        <img class="headerLogoImg w-full h-full object-cover hidden" src="" alt="Logo">
+                    </div>
+                    <span class="font-black text-slate-900 text-xs tracking-wider uppercase">New Haven POS</span>
+                </div>
+                <button onclick="toggleMobileMenu()" class="text-slate-500 font-bold text-lg md:hidden">✕</button>
+            </div>
+            <nav id="navContainer" class="flex-1 space-y-2 overflow-y-auto"></nav>
+            <div class="pt-4 border-t border-slate-100 mt-auto">
+                <button onclick="logout()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold p-3 rounded-xl text-xs flex items-center justify-center gap-2 min-h-0">
+                    🚪 CERRAR SESIÓN
+                </button>
+                <div class="text-[10px] text-center text-slate-400 font-semibold mt-3">Developed by JM</div>
+            </div>
+        </aside>
+
         <main class="flex-1 p-3 md:p-6 overflow-y-auto">
             <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR -->
             <section id="viewPedido" class="hidden space-y-4">
