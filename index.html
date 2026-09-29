@@ -192,10 +192,10 @@
                 <!-- APARTADO PARA SUBIR LOGO DEL NEGOCIO -->
                 <div class="card p-4 space-y-3 border-l-4 border-purple-600">
                     <h3 class="font-black text-sm text-purple-700 uppercase">🖼️ Logo de tu Negocio</h3>
-                    <p class="text-xs text-slate-500 font-medium">Sube el logo de tu local para mostrarlo en todos los apartados, menú, tickets y códigos QR impresos.</p>
+                    <p class="text-xs text-slate-500 font-medium">Sube el logo aquí y se guardará en la nube para que se muestre en todos tus celulares y computadoras automáticamente.</p>
                     <div class="flex flex-wrap items-center gap-3">
                         <input type="file" id="logoFileInput" accept="image/*" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs text-slate-700">
-                        <button onclick="uploadBusinessLogo()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs">💾 Guardar Logo</button>
+                        <button onclick="uploadBusinessLogo()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs">💾 Guardar Logo en la Nube</button>
                         <button onclick="removeBusinessLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs">🗑️ Quitar Logo</button>
                     </div>
                 </div>
@@ -331,6 +331,7 @@
         let currentModalItem = null;
         let tempFacturaData = null;
         let isCustomerMode = false;
+        let currentGlobalLogo = null;
 
         window.onload = function() {
             loadSavedLogo();
@@ -359,17 +360,18 @@
             }
         };
 
-        function loadSavedLogo() {
-            const savedLogo = localStorage.getItem("pos_business_logo");
-            if (savedLogo) {
+        async function loadSavedLogo() {
+            const config = await apiFetch("/config");
+            if (config && config.logo_negocio) {
+                currentGlobalLogo = config.logo_negocio;
                 document.querySelectorAll(".headerLogoImg").forEach(img => {
-                    img.src = savedLogo;
+                    img.src = currentGlobalLogo;
                     img.classList.remove("hidden");
                 });
                 document.querySelectorAll(".headerLogoFallback").forEach(span => span.classList.add("hidden"));
 
                 document.querySelectorAll(".loginLogoImg").forEach(img => {
-                    img.src = savedLogo;
+                    img.src = currentGlobalLogo;
                     img.classList.remove("hidden");
                 });
                 document.querySelectorAll(".loginLogoFallback").forEach(span => span.classList.add("hidden"));
@@ -382,16 +384,31 @@
             if (!file) return alert("Por favor selecciona una imagen de tu logo.");
 
             const base64 = await convertFileToBase64(file);
-            localStorage.setItem("pos_business_logo", base64);
-            loadSavedLogo();
-            alert("🎉 ¡Logo guardado con éxito!");
-            fileInput.value = "";
+            const res = await apiFetch("/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clave: "logo_negocio", valor: base64 })
+            });
+
+            if (res && res.success) {
+                await loadSavedLogo();
+                alert("🎉 ¡Logo guardado globalmente en la base de datos! Ahora se verá en cualquier celular y computadora.");
+                fileInput.value = "";
+            } else {
+                alert("Error al guardar el logo en la nube.");
+            }
         }
 
-        function removeBusinessLogo() {
-            if (!confirm("¿Deseas quitar el logo del negocio?")) return;
-            localStorage.removeItem("pos_business_logo");
+        async function removeBusinessLogo() {
+            if (!confirm("¿Deseas quitar el logo del negocio de la base de datos?")) return;
             
+            await apiFetch("/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clave: "logo_negocio", valor: "" })
+            });
+
+            currentGlobalLogo = null;
             document.querySelectorAll(".headerLogoImg").forEach(img => img.classList.add("hidden"));
             document.querySelectorAll(".headerLogoFallback").forEach(span => span.classList.remove("hidden"));
 
@@ -478,7 +495,7 @@
                     { id: "Caja", name: "💰 Caja" },
                     { id: "Cocina", name: "🔥 Cocina" },
                     { id: "Reportes", name: "📊 Reportes" },
-                    { id: "Admin", name: "⚙️️ Config" }
+                    { id: "Admin", name: "⚙ Config" }
                 ]
             };
 
@@ -666,8 +683,7 @@
         }
 
         function imprimirTicketCocina(orderId, cliente, items, mesero, fechaHora, esReimpresion = false) {
-            const savedLogo = localStorage.getItem("pos_business_logo");
-            const logoHtml = savedLogo ? `<img src="${savedLogo}" style="max-width: 100px; max-height: 50px; margin: 0 auto 5px auto; display: block; object-fit: contain;">` : '';
+            const logoHtml = currentGlobalLogo ? `<img src="${currentGlobalLogo}" style="max-width: 100px; max-height: 50px; margin: 0 auto 5px auto; display: block; object-fit: contain;">` : '';
 
             const itemsHtml = items.map(item => `
                 <div style="font-size: 15px; font-weight: bold; margin: 6px 0; display: flex;">
@@ -902,8 +918,7 @@
         function imprimirCodigosQR() {
             const count = parseInt(document.getElementById("qrTableCount").value) || 10;
             const baseUrl = window.location.origin + window.location.pathname;
-            const savedLogo = localStorage.getItem("pos_business_logo");
-            const logoHtml = savedLogo ? `<img src="${savedLogo}" style="max-width: 70px; max-height: 40px; margin: 0 auto 5px auto; display: block; object-fit: contain;">` : '';
+            const logoHtml = currentGlobalLogo ? `<img src="${currentGlobalLogo}" style="max-width: 70px; max-height: 40px; margin: 0 auto 5px auto; display: block; object-fit: contain;">` : '';
 
             const printWin = window.open('', '_blank', 'width=800,height=900');
             if (!printWin) return alert("Por favor permite las ventanas emergentes para abrir la hoja de impresión.");

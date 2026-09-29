@@ -13,6 +13,20 @@ export default {
     if (method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
+      // CONFIGURACIÓN GLOBAL (LOGO)
+      if (path === "/api/config" && method === "GET") {
+        const { results } = await env.DB.prepare("SELECT * FROM pos_config").all();
+        const config = {};
+        results.forEach(row => config[row.clave] = row.valor);
+        return Response.json(config, { headers: corsHeaders });
+      }
+      if (path === "/api/config" && method === "POST") {
+        const { clave, valor } = await request.json();
+        await env.DB.prepare("INSERT INTO pos_config (clave, valor) VALUES (?, ?) ON CONFLICT(clave) DO UPDATE SET valor=excluded.valor").bind(clave, valor).run();
+        return Response.json({ success: true }, { headers: corsHeaders });
+      }
+
+      // USUARIOS
       if (path === "/api/usuarios" && method === "GET") {
         const { results } = await env.DB.prepare("SELECT * FROM pos_usuarios").all();
         return Response.json(results, { headers: corsHeaders });
@@ -28,6 +42,7 @@ export default {
         return Response.json({ success: true }, { headers: corsHeaders });
       }
 
+      // CATEGORÍAS
       if (path === "/api/categorias" && method === "GET") {
         const { results } = await env.DB.prepare("SELECT * FROM pos_categorias").all();
         return Response.json(results, { headers: corsHeaders });
@@ -43,6 +58,7 @@ export default {
         return Response.json({ success: true }, { headers: corsHeaders });
       }
 
+      // SALSAS
       if (path === "/api/salsas" && method === "GET") {
         const { results } = await env.DB.prepare("SELECT * FROM pos_salsas").all();
         return Response.json(results, { headers: corsHeaders });
@@ -58,6 +74,7 @@ export default {
         return Response.json({ success: true }, { headers: corsHeaders });
       }
 
+      // PRODUCTOS
       if (path === "/api/productos" && method === "GET") {
         const { results } = await env.DB.prepare("SELECT * FROM pos_productos").all();
         return Response.json(results, { headers: corsHeaders });
@@ -73,6 +90,7 @@ export default {
         return Response.json({ success: true }, { headers: corsHeaders });
       }
 
+      // PEDIDOS
       if (path === "/api/pedidos" && method === "GET") {
         const { results } = await env.DB.prepare("SELECT * FROM pos_pedidos ORDER BY id DESC").all();
         return Response.json(results, { headers: corsHeaders });
