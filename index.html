@@ -7,102 +7,112 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; touch-action: manipulation; }
-        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
-        .btn-primary { background-color: #10b981; color: white; font-weight: bold; }
-        .btn-primary:hover { background-color: #059669; }
+        body { background-color: #f1f5f9; color: #0f172a; font-family: system-ui, -apple-system, sans-serif; touch-action: manipulation; }
+        .card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .btn-primary { background-color: #dc2626; color: white; font-weight: bold; }
+        .btn-primary:hover { background-color: #b91c1c; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         button, input, select { min-height: 44px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:h-screen md:overflow-hidden relative bg-slate-900">
+<body class="min-h-screen flex flex-col relative bg-slate-100 text-slate-800">
 
-    <div class="fixed bottom-1 right-2 pointer-events-none z-50 text-[9px] md:text-xs font-semibold text-slate-500/50 tracking-wider uppercase select-none">
-        Developed by JM
-    </div>
+    <!-- OVERLAY PARA MÓVIL (FONDO OSCURO AL ABRIR EL MENÚ) -->
+    <div id="drawerOverlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/60 z-40 hidden transition-opacity"></div>
 
-    <!-- HEADER / BARRA SUPERIOR -->
-    <header class="bg-slate-800 border-b border-slate-700 px-3 md:px-4 py-2.5 flex justify-between items-center shrink-0 z-40 sticky top-0 md:relative">
-        <div class="flex items-center gap-2 md:gap-3">
-            <button id="btnMobileMenu" onclick="toggleMobileMenu()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-xl font-bold min-h-0 hidden">☰</button>
-            <h1 class="text-sm md:text-xl font-bold text-emerald-400 flex items-center gap-1">⚡ New Haven POS</h1>
-        </div>
-        
-        <div id="userInfo" class="flex items-center gap-2 hidden">
-            <span id="userBadge" class="text-xs font-semibold bg-slate-700 px-2.5 py-1 rounded-full truncate max-w-[120px] sm:max-w-none"></span>
-            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2.5 py-1.5 rounded-lg font-bold min-h-0 hidden md:block">Salir</button>
+    <!-- HEADER ESTILO CONTROL MIKEL -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shrink-0 z-30 sticky top-0 shadow-sm">
+        <h1 class="text-base md:text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-wide">
+            ⚙️ CONTROL NEW HAVEN
+        </h1>
+        <div class="flex items-center gap-3">
+            <div id="userInfo" class="hidden">
+                <span id="userBadge" class="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200"></span>
+            </div>
+            <button id="btnMobileMenu" onclick="toggleMobileMenu()" class="text-slate-800 text-2xl font-bold p-1 focus:outline-none hidden">☰</button>
         </div>
     </header>
 
-    <!-- LOGIN SCREEN -->
+    <!-- MENÚ LATERAL DESPLEGABLE (OFF-CANVAS DRAWER) -->
+    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col p-4 shadow-2xl md:shadow-none border-r border-slate-200 md:static md:w-64 shrink-0">
+        <div class="flex items-center justify-between mb-6 pb-2 border-b border-slate-100 md:hidden">
+            <span class="font-black text-slate-900 text-sm tracking-wider">MENÚ DE NAVEGACIÓN</span>
+            <button onclick="toggleMobileMenu()" class="text-slate-500 font-bold text-lg">✕</button>
+        </div>
+        <nav id="navContainer" class="flex-1 space-y-2 overflow-y-auto"></nav>
+        <div class="pt-4 border-t border-slate-100 mt-auto">
+            <button onclick="logout()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold p-3 rounded-xl text-xs flex items-center justify-center gap-2 min-h-0">
+                🚪 CERRAR SESIÓN
+            </button>
+            <div class="text-[10px] text-center text-slate-400 font-semibold mt-3">Developed by JM</div>
+        </div>
+    </aside>
+
+    <!-- PANTALLA DE LOGIN -->
     <div id="loginScreen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="card p-5 md:p-8 w-full max-w-md shadow-xl text-center">
-            <h2 class="text-2xl font-bold text-emerald-400 mb-1">⚡ New Haven POS</h2>
-            <p class="text-slate-400 text-xs md:text-sm mb-6">Inicio de Sesión Centralizado</p>
+        <div class="card p-6 md:p-8 w-full max-w-md text-center">
+            <h2 class="text-2xl font-black text-slate-900 mb-1">⚡ New Haven POS</h2>
+            <p class="text-slate-500 text-xs mb-6 font-medium">Inicio de Sesión Centralizado</p>
             <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
                 <div>
-                    <label class="text-xs text-slate-400 font-bold block mb-1">Usuario</label>
-                    <input type="text" id="loginUser" placeholder="Ingresa tu usuario" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 text-sm" required>
+                    <label class="text-xs text-slate-600 font-bold block mb-1">Usuario</label>
+                    <input type="text" id="loginUser" placeholder="Ingresa tu usuario" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 text-sm focus:outline-none focus:border-red-500" required>
                 </div>
                 <div>
-                    <label class="text-xs text-slate-400 font-bold block mb-1">Contraseña</label>
-                    <input type="password" id="loginPass" placeholder="Ingresa tu clave" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 text-sm" required>
+                    <label class="text-xs text-slate-600 font-bold block mb-1">Contraseña</label>
+                    <input type="password" id="loginPass" placeholder="Ingresa tu clave" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 text-sm focus:outline-none focus:border-red-500" required>
                 </div>
-                <button type="submit" class="w-full btn-primary p-3 rounded-lg text-sm md:text-base">INGRESAR AL SISTEMA</button>
+                <button type="submit" class="w-full btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">INGRESAR AL SISTEMA</button>
             </form>
-            <p class="text-xs text-slate-500 mt-4">Demo: admin/admin, mesero1/1234, multi1/1234</p>
+            <p class="text-[11px] text-slate-400 mt-4">Demo: admin/admin, mesero1/1234, multi1/1234</p>
         </div>
     </div>
 
-    <!-- MAIN APP SCREEN -->
-    <div id="appScreen" class="flex-1 flex flex-col md:flex-row overflow-hidden hidden relative">
-        <!-- MENÚ LATERAL / DESPLEGABLE EN MÓVIL -->
-        <nav id="sidebar" class="w-full md:w-64 bg-slate-800/95 backdrop-blur p-3 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col gap-1.5 overflow-y-auto shrink-0 z-30 hidden md:flex fixed md:relative inset-x-0 top-[49px] md:top-0 bottom-0 md:bottom-auto shadow-2xl md:shadow-none"></nav>
-
-        <main class="flex-1 p-2.5 sm:p-4 md:p-6 overflow-y-auto pb-20 md:pb-6">
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="appScreen" class="flex-1 flex overflow-hidden hidden">
+        <main class="flex-1 p-3 md:p-6 overflow-y-auto">
             <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR -->
-            <section id="viewPedido" class="hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
+            <section id="viewPedido" class="hidden space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="lg:col-span-2 space-y-3">
-                        <div class="flex items-center gap-2 bg-slate-800 p-2.5 rounded-xl">
-                            <label class="font-bold text-xs shrink-0 text-slate-300">📁 Sección:</label>
-                            <select id="filterCategory" onchange="renderCatalog()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs md:text-sm focus:outline-none focus:border-emerald-500"></select>
+                        <div class="card p-3 flex items-center gap-2">
+                            <label class="font-bold text-xs shrink-0 text-slate-700">📁 Sección:</label>
+                            <select id="filterCategory" onchange="renderCatalog()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-800 text-xs focus:outline-none"></select>
                         </div>
-                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3"></div>
+                        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                     </div>
 
-                    <!-- ORDEN Y CARRITO -->
-                    <div class="card p-3 md:p-4 flex flex-col h-full">
-                        <h3 class="font-bold text-sm md:text-lg mb-2 flex justify-between items-center text-emerald-400">
+                    <!-- CARRITO Y RESUMEN -->
+                    <div class="card p-4 flex flex-col h-full space-y-3">
+                        <h3 class="font-black text-sm md:text-base flex justify-between items-center text-slate-900 uppercase">
                             <span id="orderTitle">Orden del Cliente</span>
-                            <span id="mobileCartCount" class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-mono">0 items</span>
+                            <span id="mobileCartCount" class="text-xs bg-red-100 text-red-600 px-2.5 py-0.5 rounded-full font-bold">0 items</span>
                         </h3>
-                        <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs md:text-sm mb-2 text-white">
+                        <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800">
                         
-                        <div class="mb-2">
-                            <button onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2 rounded-lg flex items-center justify-center gap-1.5 min-h-0">📄 Datos para Factura</button>
-                            <div id="facturaBadge" class="hidden text-xs text-emerald-400 font-semibold mt-1 bg-slate-900 p-1 rounded text-center">✅ Datos cargados</div>
-                        </div>
+                        <button onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2.5 rounded-xl flex items-center justify-center gap-1 min-h-0">📄 Datos de Factura</button>
+                        <div id="facturaBadge" class="hidden text-xs text-emerald-600 font-bold bg-emerald-50 p-1.5 rounded-lg text-center border border-emerald-200">✅ Datos cargados</div>
 
-                        <div class="bg-slate-900/80 p-2 rounded-lg mb-2 border border-slate-700/50">
-                            <span class="text-[11px] font-bold text-purple-400 block mb-1">✨ Pedido Especial Libre</span>
-                            <div class="flex gap-1.5 mb-1">
-                                <input type="text" id="customItemDesc" placeholder="Descripción" class="w-2/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
-                                <input type="number" id="customItemPrice" placeholder="Precio $" class="w-1/3 bg-slate-800 border border-slate-700 rounded p-1.5 text-xs text-white">
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                            <span class="text-[11px] font-bold text-purple-700 block">✨ Pedido Especial Libre</span>
+                            <div class="flex gap-1.5">
+                                <input type="text" id="customItemDesc" placeholder="Descripción" class="w-2/3 bg-white border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">
+                                <input type="number" id="customItemPrice" placeholder="Precio $" class="w-1/3 bg-white border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">
                             </div>
-                            <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold p-1 rounded min-h-0">Agregar</button>
+                            <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold p-1.5 rounded-lg min-h-0">Agregar Item</button>
                         </div>
 
-                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 mb-2 pr-1 min-h-[100px] max-h-[220px] md:max-h-[300px]"></div>
+                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 my-2 pr-1 min-h-[120px] max-h-[220px]"></div>
 
-                        <div class="border-t border-slate-700 pt-2 mt-auto">
-                            <div class="flex justify-between items-center text-base md:text-lg font-bold text-emerald-400 mb-2">
+                        <div class="border-t border-slate-200 pt-3 mt-auto">
+                            <div class="flex justify-between items-center text-lg font-black text-slate-900 mb-3">
                                 <span>TOTAL:</span>
-                                <span id="cartTotal">$0.00</span>
+                                <span id="cartTotal" class="text-red-600">$0.00</span>
                             </div>
-                            <button onclick="submitOrder()" class="w-full btn-primary p-3 rounded-lg text-sm md:text-base">🚀 ENVIAR PEDIDO</button>
+                            <button onclick="submitOrder()" class="w-full btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">🚀 ENVIAR PEDIDO</button>
                         </div>
                     </div>
                 </div>
@@ -110,104 +120,102 @@
 
             <!-- VISTA: CAJA -->
             <section id="viewCaja" class="hidden space-y-3">
-                <h2 class="text-lg md:text-2xl font-bold text-sky-400">💰 Panel de Cobros y Caja</h2>
-                <div id="pendingOrders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4"></div>
+                <h2 class="text-lg font-black text-slate-900 uppercase">💰 Panel de Cobros y Caja</h2>
+                <div id="pendingOrders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
             </section>
 
             <!-- VISTA: COCINA -->
             <section id="viewCocina" class="hidden space-y-3">
-                <h2 class="text-lg md:text-2xl font-bold text-orange-400">🔥 Monitor de Cocina</h2>
-                <div id="kitchenOrders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4"></div>
+                <h2 class="text-lg font-black text-slate-900 uppercase">🔥 Monitor de Cocina</h2>
+                <div id="kitchenOrders" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
             </section>
 
             <!-- VISTA: REPORTES -->
-            <section id="viewReportes" class="hidden space-y-3 md:space-y-6">
+            <section id="viewReportes" class="hidden space-y-4">
                 <div class="flex justify-between items-center flex-wrap gap-2">
-                    <h2 class="text-lg md:text-2xl font-bold text-emerald-400">📊 Reportes y Facturación</h2>
-                    <button onclick="generarFacturaCompletaContadoraPDF()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">📄 Descargar Reporte PDF</button>
+                    <h2 class="text-lg font-black text-slate-900 uppercase">📊 Reportes y Facturación</h2>
+                    <button onclick="generarFacturaCompletaContadoraPDF()" class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2">📄 Descargar PDF</button>
                 </div>
-                <div class="card p-3 flex flex-wrap gap-3 items-center">
-                    <label class="font-bold text-xs">📅 Filtrar por Fecha:</label>
-                    <input type="date" id="reportDate" onchange="renderReports()" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white text-xs w-full sm:w-auto">
+                <div class="card p-3 flex items-center gap-3">
+                    <label class="font-bold text-xs">📅 Fecha:</label>
+                    <input type="date" id="reportDate" onchange="renderReports()" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs text-slate-800">
                 </div>
-                <div class="grid grid-cols-2 gap-2.5 md:gap-4">
-                    <div class="card p-3 md:p-6 border-emerald-500 text-center">
-                        <span class="text-slate-400 text-[11px] md:text-sm">Ventas Cobradas</span>
-                        <div id="kpiTotal" class="text-lg md:text-3xl font-bold text-emerald-400 mt-1">$0.00</div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="card p-4 border-l-4 border-emerald-500 text-center">
+                        <span class="text-slate-500 text-[11px] font-bold block">Ventas Cobradas</span>
+                        <div id="kpiTotal" class="text-xl font-black text-emerald-600 mt-1">$0.00</div>
                     </div>
-                    <div class="card p-3 md:p-6 border-sky-500 text-center">
-                        <span class="text-slate-400 text-[11px] md:text-sm">Cant. Pedidos</span>
-                        <div id="kpiCount" class="text-lg md:text-3xl font-bold text-sky-400 mt-1">0</div>
+                    <div class="card p-4 border-l-4 border-sky-500 text-center">
+                        <span class="text-slate-500 text-[11px] font-bold block">Cant. Pedidos</span>
+                        <div id="kpiCount" class="text-xl font-black text-sky-600 mt-1">0</div>
                     </div>
                 </div>
                 <div class="card p-3">
-                    <h3 class="font-bold mb-2 text-xs text-sky-400">💳 Desglose por Formas de Pago</h3>
+                    <h3 class="font-bold text-xs text-slate-700 mb-2">💳 Formas de Pago</h3>
                     <div id="paymentBreakdown" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
                 </div>
                 <div class="card p-3">
-                    <h3 class="font-bold mb-2 text-xs">📋 Historial de Ventas</h3>
+                    <h3 class="font-bold text-xs text-slate-700 mb-2">📋 Historial de Ventas</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-700 text-slate-300">
+                            <thead class="bg-slate-100 text-slate-600 font-bold">
                                 <tr>
-                                    <th class="p-2">ID</th><th class="p-2">Fecha</th><th class="p-2">Usuario</th><th class="p-2">Razón Social</th><th class="p-2">RUC/CI</th><th class="p-2">Dirección</th><th class="p-2">Telf</th><th class="p-2">Email</th><th class="p-2 min-w-[140px]">Detalle</th><th class="p-2">Pago</th><th class="p-2">Total</th><th class="p-2">Estado</th><th class="p-2">Acción</th>
+                                    <th class="p-2">ID</th><th class="p-2">Fecha</th><th class="p-2">Usuario</th><th class="p-2">Razón Social</th><th class="p-2">RUC/CI</th><th class="p-2">Dirección</th><th class="p-2">Telf</th><th class="p-2">Email</th><th class="p-2 min-w-[120px]">Detalle</th><th class="p-2">Pago</th><th class="p-2">Total</th><th class="p-2">Estado</th><th class="p-2">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="reportTableBody" class="divide-y divide-slate-700"></tbody>
+                            <tbody id="reportTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- VISTA: ADMIN CONFIGURACIÓN -->
+            <!-- VISTA: CONFIGURACIÓN -->
             <section id="viewAdmin" class="hidden space-y-4">
-                <h2 class="text-lg md:text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
+                <h2 class="text-lg font-black text-slate-900 uppercase">⚙️ Configuración del Sistema</h2>
 
-                <!-- APARTADO CÓDIGOS QR DE MESAS -->
-                <div class="card p-3 md:p-6 space-y-3 border-l-4 border-sky-500">
-                    <h3 class="font-bold text-sm md:text-lg text-sky-400">📱 Códigos QR para Autopedido en Mesas</h3>
-                    <p class="text-xs text-slate-400">Genera e imprime los códigos QR que irán pegados en las mesas para autopedido.</p>
+                <div class="card p-4 space-y-3 border-l-4 border-sky-500">
+                    <h3 class="font-black text-sm text-sky-600 uppercase">📱 Códigos QR para Mesas</h3>
                     <div class="flex flex-wrap items-center gap-2">
-                        <label class="text-xs font-bold text-slate-300">Total mesas:</label>
-                        <input type="number" id="qrTableCount" value="10" min="1" max="50" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white w-20">
-                        <button onclick="imprimirCodigosQR()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-3 py-2 rounded text-xs flex items-center gap-1.5">🖨 Imprimir QR</button>
+                        <label class="text-xs font-bold text-slate-700">Total mesas:</label>
+                        <input type="number" id="qrTableCount" value="10" min="1" max="50" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs text-slate-800 w-20">
+                        <button onclick="imprimirCodigosQR()" class="bg-sky-600 text-white font-bold px-3 py-2 rounded-xl text-xs">🖨 Imprimir QR</button>
                     </div>
                 </div>
 
-                <div class="card p-3 md:p-6 space-y-3 border-l-4 border-emerald-500">
-                    <h3 class="font-bold text-sm md:text-lg text-emerald-400">🍔 Gestión de Productos</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2">
-                        <input type="text" id="newProdName" placeholder="Nombre Producto" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                        <input type="text" id="newProdDesc" placeholder="Detalle / Contenido (Ej: Pan, Pechuga, Queso)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white md:col-span-2">
-                        <input type="number" step="0.01" id="newProdPrice" placeholder="Precio ($)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                        <select id="newProdCategory" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></select>
-                        <input type="file" id="newProdImage" accept="image/*" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-300">
-                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded p-2 text-xs md:col-span-2">
-                            <input type="checkbox" id="newProdSauce" class="rounded border-slate-700 text-emerald-500">
-                            <label for="newProdSauce" class="text-slate-300">¿Salsa / Término?</label>
+                <div class="card p-4 space-y-3 border-l-4 border-red-500">
+                    <h3 class="font-black text-sm text-red-600 uppercase">🍔 Gestión de Productos</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <input type="text" id="newProdName" placeholder="Nombre Producto" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                        <input type="text" id="newProdDesc" placeholder="Detalle / Contenido" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                        <input type="number" step="0.01" id="newProdPrice" placeholder="Precio ($)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                        <select id="newProdCategory" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs"></select>
+                        <input type="file" id="newProdImage" accept="image/*" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs">
+                        <div class="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                            <input type="checkbox" id="newProdSauce" class="rounded text-red-600">
+                            <label for="newProdSauce" class="text-slate-700 font-bold">¿Salsa / Término?</label>
                         </div>
                     </div>
-                    <button onclick="addProduct()" class="btn-primary px-4 py-2 rounded text-xs w-full md:w-auto">➕ Guardar Producto</button>
+                    <button onclick="addProduct()" class="btn-primary px-4 py-2 rounded-xl text-xs w-full sm:w-auto">➕ Guardar Producto</button>
 
                     <div class="overflow-x-auto mt-2">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-700 text-slate-300">
+                            <thead class="bg-slate-100 text-slate-600 font-bold">
                                 <tr>
-                                    <th class="p-2">Foto</th><th class="p-2">Producto</th><th class="p-2">Detalle/Contenido</th><th class="p-2">Precio</th><th class="p-2">Sección</th><th class="p-2">Salsa</th><th class="p-2">Acción</th>
+                                    <th class="p-2">Foto</th><th class="p-2">Producto</th><th class="p-2">Detalle</th><th class="p-2">Precio</th><th class="p-2">Sección</th><th class="p-2">Salsa</th><th class="p-2">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="productsTableBody" class="divide-y divide-slate-700"></tbody>
+                            <tbody id="productsTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="card p-3 md:p-6 space-y-3">
-                    <h3 class="font-bold text-sm md:text-lg text-emerald-400">👥 Gestión de Personal</h3>
+                <div class="card p-4 space-y-3">
+                    <h3 class="font-black text-sm text-slate-900 uppercase">👥 Gestión de Personal</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                        <input type="text" id="newFullName" placeholder="Nombre Completo" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                        <input type="text" id="newUsername" placeholder="Usuario (Login)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                        <input type="password" id="newPassword" placeholder="Contraseña" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                        <select id="newRole" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                        <input type="text" id="newFullName" placeholder="Nombre Completo" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                        <input type="text" id="newUsername" placeholder="Usuario (Login)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                        <input type="password" id="newPassword" placeholder="Contraseña" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                        <select id="newRole" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
                             <option value="mesero">Mesero</option>
                             <option value="cocina">Cocina</option>
                             <option value="caja">Caja</option>
@@ -215,37 +223,37 @@
                             <option value="admin">Administrador</option>
                         </select>
                     </div>
-                    <button onclick="addUser()" class="btn-primary px-4 py-2 rounded text-xs w-full md:w-auto">➕ Guardar Usuario</button>
+                    <button onclick="addUser()" class="btn-primary px-4 py-2 rounded-xl text-xs w-full sm:w-auto">➕ Guardar Usuario</button>
 
                     <div class="overflow-x-auto mt-2">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-700 text-slate-300">
+                            <thead class="bg-slate-100 text-slate-600 font-bold">
                                 <tr>
                                     <th class="p-2">Nombre</th><th class="p-2">Usuario</th><th class="p-2">Cargo</th><th class="p-2">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="usersTableBody" class="divide-y divide-slate-700"></tbody>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="card p-3 space-y-2">
-                        <h3 class="font-bold text-xs md:text-base">📁 Secciones / Categorías</h3>
+                        <h3 class="font-bold text-xs text-slate-800">📁 Secciones / Categorías</h3>
                         <div class="flex gap-2">
-                            <input type="text" id="newCatName" placeholder="Nueva Sección" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                            <button onclick="addCategory()" class="btn-primary px-3 py-2 rounded text-xs min-h-0">Crear</button>
+                            <input type="text" id="newCatName" placeholder="Nueva Sección" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                            <button onclick="addCategory()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Crear</button>
                         </div>
-                        <ul id="catList" class="divide-y divide-slate-700 text-xs"></ul>
+                        <ul id="catList" class="divide-y divide-slate-100 text-xs"></ul>
                     </div>
 
                     <div class="card p-3 space-y-2">
-                        <h3 class="font-bold text-xs md:text-base">🥫 Salsas y Términos</h3>
+                        <h3 class="font-bold text-xs text-slate-800">🥫 Salsas y Términos</h3>
                         <div class="flex gap-2">
-                            <input type="text" id="newSauceName" placeholder="Ej: BBQ, Picante" class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
-                            <button onclick="addSauce()" class="btn-primary px-3 py-2 rounded text-xs min-h-0">Crear</button>
+                            <input type="text" id="newSauceName" placeholder="Ej: BBQ, Picante" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+                            <button onclick="addSauce()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Crear</button>
                         </div>
-                        <ul id="sauceList" class="divide-y divide-slate-700 text-xs"></ul>
+                        <ul id="sauceList" class="divide-y divide-slate-100 text-xs"></ul>
                     </div>
                 </div>
             </section>
@@ -253,37 +261,37 @@
     </div>
 
     <!-- MODALES -->
-    <div id="facturaModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-3 z-50 hidden backdrop-blur-sm">
-        <div class="card p-4 md:p-5 w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-sm md:text-lg text-sky-400">📄 Datos de Facturación</h3>
+    <div id="facturaModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
+        <div class="card p-4 w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto">
+            <h3 class="font-black text-sm text-sky-600 uppercase">📄 Datos de Facturación</h3>
             <div class="space-y-2">
-                <div><label class="text-[11px] font-bold text-slate-400 block mb-0.5">RUC / Cédula:</label><input type="text" id="modalFactRuc" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></div>
-                <div><label class="text-[11px] font-bold text-slate-400 block mb-0.5">Razón Social:</label><input type="text" id="modalFactRazon" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></div>
-                <div><label class="text-[11px] font-bold text-slate-400 block mb-0.5">Dirección:</label><input type="text" id="modalFactDir" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></div>
-                <div><label class="text-[11px] font-bold text-slate-400 block mb-0.5">Teléfono:</label><input type="text" id="modalFactPhone" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></div>
-                <div><label class="text-[11px] font-bold text-slate-400 block mb-0.5">Correo Electrónico:</label><input type="email" id="modalFactEmail" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></div>
+                <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">RUC / Cédula:</label><input type="text" id="modalFactRuc" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></div>
+                <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">Razón Social:</label><input type="text" id="modalFactRazon" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></div>
+                <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">Dirección:</label><input type="text" id="modalFactDir" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></div>
+                <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">Teléfono:</label><input type="text" id="modalFactPhone" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></div>
+                <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">Correo Electrónico:</label><input type="email" id="modalFactEmail" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></div>
             </div>
             <div class="flex gap-2 justify-end pt-2">
-                <button onclick="closeFacturaModal()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded text-xs font-bold min-h-0">Cancelar</button>
-                <button onclick="saveFacturaData()" class="btn-primary px-3 py-2 rounded text-xs min-h-0">Guardar Datos</button>
+                <button onclick="closeFacturaModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
+                <button onclick="saveFacturaData()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Guardar Datos</button>
             </div>
         </div>
     </div>
 
-    <div id="sauceModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-3 z-50 hidden backdrop-blur-sm">
-        <div class="card p-4 md:p-5 w-full max-w-md space-y-3">
-            <h3 id="modalTitle" class="font-bold text-sm md:text-lg text-sky-400"></h3>
+    <div id="sauceModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
+        <div class="card p-4 w-full max-w-md space-y-3">
+            <h3 id="modalTitle" class="font-black text-sm text-slate-900 uppercase"></h3>
             <div>
-                <label class="text-[11px] font-bold text-slate-400 block mb-1">Selecciona Salsa o Término:</label>
-                <select id="modalSauceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white"></select>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Selecciona Salsa o Término:</label>
+                <select id="modalSauceSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></select>
             </div>
             <div>
-                <label class="text-[11px] font-bold text-slate-400 block mb-1">Nota adicional (Opcional):</label>
-                <input type="text" id="modalNoteInput" placeholder="Ej: Bien crujiente" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white">
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nota adicional (Opcional):</label>
+                <input type="text" id="modalNoteInput" placeholder="Ej: Bien crujiente" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs">
             </div>
             <div class="flex gap-2 justify-end pt-2">
-                <button onclick="closeSauceModal()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded text-xs font-bold min-h-0">Cancelar</button>
-                <button onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded text-xs min-h-0">Agregar</button>
+                <button onclick="closeSauceModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
+                <button onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Agregar</button>
             </div>
         </div>
     </div>
@@ -364,14 +372,19 @@
             document.getElementById("userInfo").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
             document.getElementById("btnMobileMenu").classList.add("hidden");
+            document.getElementById("sidebar").classList.add("-translate-x-full");
+            document.getElementById("drawerOverlay").classList.add("hidden");
         }
 
         function toggleMobileMenu() {
-            document.getElementById("sidebar").classList.toggle("hidden");
+            const sidebar = document.getElementById("sidebar");
+            const overlay = document.getElementById("drawerOverlay");
+            sidebar.classList.toggle("-translate-x-full");
+            overlay.classList.toggle("hidden");
         }
 
         function setupNavigation() {
-            const nav = document.getElementById("sidebar");
+            const nav = document.getElementById("navContainer");
             nav.innerHTML = "";
 
             if (isCustomerMode) {
@@ -387,14 +400,14 @@
                     { id: "Pedido", name: "📝 Tomar Pedido" },
                     { id: "Caja", name: "💰 Caja y Cobros" },
                     { id: "Cocina", name: "🔥 Cocina" },
-                    { id: "Reportes", name: "📋 Lista de Ventas / Reportes" }
+                    { id: "Reportes", name: "📋 Ventas / Reportes" }
                 ],
                 "admin": [
-                    { id: "Pedido", name: "📝 Pedido" },
-                    { id: "Caja", name: "💰 Caja" },
-                    { id: "Cocina", name: "🔥 Cocina" },
+                    { id: "Pedido", name: "📝 Tomar Pedido" },
+                    { id: "Caja", name: "💰 Caja y Cobros" },
+                    { id: "Cocina", name: "🔥 Monitor Cocina" },
                     { id: "Reportes", name: "📊 Reportes" },
-                    { id: "Admin", name: "⚙️ Config" }
+                    { id: "Admin", name: "⚙️ Configuración" }
                 ]
             };
 
@@ -402,21 +415,15 @@
 
             allowed.forEach((v, index) => {
                 const btn = document.createElement("button");
-                btn.className = "w-full text-left p-3 rounded-lg font-bold bg-slate-700 hover:bg-slate-600 transition text-xs shrink-0 min-h-0 mb-1 flex items-center gap-2";
+                btn.className = "w-full text-left p-3 rounded-xl font-bold transition text-xs flex items-center gap-2 bg-slate-100 text-slate-800 hover:bg-red-600 hover:text-white";
                 btn.innerText = v.name;
                 btn.onclick = () => {
                     switchView(v.id);
-                    if (window.innerWidth < 768) nav.classList.add("hidden");
+                    if (window.innerWidth < 768) toggleMobileMenu();
                 };
                 nav.appendChild(btn);
                 if (index === 0) switchView(v.id);
             });
-
-            const logoutMobileBtn = document.createElement("button");
-            logoutMobileBtn.className = "w-full text-left p-3 rounded-lg font-bold bg-red-600 hover:bg-red-700 transition text-xs md:hidden shrink-0 min-h-0 mt-auto";
-            logoutMobileBtn.innerText = "🚪 Cerrar Sesión";
-            logoutMobileBtn.onclick = logout;
-            nav.appendChild(logoutMobileBtn);
         }
 
         function switchView(viewId) {
@@ -463,12 +470,12 @@
                 prods = prods.filter(p => p.categoria === catSelect.value);
             }
             catalogGrid.innerHTML = prods.map(p => `
-                <div class="card p-2 flex flex-col justify-between items-center text-center">
-                    ${p.imagen ? `<img src="${p.imagen}" class="w-full aspect-video object-cover rounded-md mb-1.5 border border-slate-700">` : `<div class="w-full aspect-video bg-slate-800 rounded-md flex items-center justify-center text-xl mb-1.5 text-slate-600">🍔</div>`}
-                    <div class="font-bold text-[11px] md:text-sm mb-0.5 leading-tight">${p.nombre}</div>
-                    ${p.descripcion ? `<div class="text-[9px] md:text-xs text-slate-400 mb-1 leading-snug line-clamp-2">${p.descripcion}</div>` : ''}
-                    <div class="text-emerald-400 font-bold text-xs md:text-sm mb-1.5">$${p.precio.toFixed(2)}</div>
-                    <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1.5 px-2 rounded text-xs min-h-0">Agregar +</button>
+                <div class="card p-2.5 flex flex-col justify-between items-center text-center">
+                    ${p.imagen ? `<img src="${p.imagen}" class="w-full aspect-video object-cover rounded-lg mb-1.5 border border-slate-200">` : `<div class="w-full aspect-video bg-slate-100 rounded-lg flex items-center justify-center text-xl mb-1.5 text-slate-400">🍔</div>`}
+                    <div class="font-black text-xs mb-0.5 leading-tight text-slate-900">${p.nombre}</div>
+                    ${p.descripcion ? `<div class="text-[10px] text-slate-500 mb-1 leading-snug line-clamp-2 font-medium">${p.descripcion}</div>` : ''}
+                    <div class="text-red-600 font-black text-xs mb-1.5">$${p.precio.toFixed(2)}</div>
+                    <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1.5 px-2 rounded-lg text-xs min-h-0">Agregar +</button>
                 </div>
             `).join("");
         }
@@ -517,11 +524,11 @@
             container.innerHTML = cart.map((item, idx) => {
                 total += item.precio;
                 return `
-                    <div class="flex justify-between items-center bg-slate-900 p-1.5 rounded text-xs">
-                        <span class="font-medium truncate max-w-[140px] md:max-w-[170px]">${item.nombre}</span>
+                    <div class="flex justify-between items-center bg-slate-100 p-2 rounded-lg text-xs border border-slate-200">
+                        <span class="font-bold text-slate-800 truncate max-w-[140px]">${item.nombre}</span>
                         <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="text-emerald-400 font-bold">$${item.precio.toFixed(2)}</span>
-                            <button onclick="cart.splice(${idx}, 1); renderCart();" class="text-red-400 hover:text-red-300 font-bold min-h-0 px-1">✕</button>
+                            <span class="text-red-600 font-black">$${item.precio.toFixed(2)}</span>
+                            <button onclick="cart.splice(${idx}, 1); renderCart();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1">✕</button>
                         </div>
                     </div>
                 `;
@@ -655,23 +662,23 @@
             container.innerHTML = pending.map(p => `
                 <div class="card p-3 space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-sky-400 text-sm">Orden #${p.id} - ${p.cliente}</span>
-                        <span class="text-[11px] text-slate-400">${p.mesero}</span>
+                        <span class="font-black text-sky-600 text-sm">Orden #${p.id} - ${p.cliente}</span>
+                        <span class="text-[11px] text-slate-500 font-bold">${p.mesero}</span>
                     </div>
-                    <div class="text-[11px] text-slate-400 bg-slate-900 p-2 rounded space-y-0.5">
-                        <div>Razón Social: <span class="text-white font-medium">${p.fact_razon || p.cliente}</span></div>
-                        <div>RUC/CI: <span class="text-white font-medium">${p.fact_ruc || 'N/A'}</span></div>
-                        <div>Dir: <span class="text-white font-medium">${p.fact_dir || 'N/A'}</span></div>
+                    <div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg space-y-0.5 border border-slate-200">
+                        <div>Razón Social: <span class="text-slate-900 font-bold">${p.fact_razon || p.cliente}</span></div>
+                        <div>RUC/CI: <span class="text-slate-900 font-bold">${p.fact_ruc || 'N/A'}</span></div>
+                        <div>Dir: <span class="text-slate-900 font-bold">${p.fact_dir || 'N/A'}</span></div>
                     </div>
-                    <div class="text-xl font-bold text-emerald-400">$${p.total.toFixed(2)}</div>
-                    <select id="payMethod_${p.id}" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white">
+                    <div class="text-xl font-black text-slate-900">$${p.total.toFixed(2)}</div>
+                    <select id="payMethod_${p.id}" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Transf. Banco de Loja">Transf. Banco de Loja</option>
                         <option value="Transf. Banco Pichincha">Transf. Banco Pichincha</option>
                     </select>
                     <div class="flex gap-2">
-                        <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-700 hover:bg-slate-600 font-bold py-2 rounded text-xs text-white min-h-0">🖨 Ticket</button>
-                        <button onclick="processPayment(${p.id})" class="w-2/3 btn-primary py-2 rounded text-xs min-h-0">💵 COBRAR</button>
+                        <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>
+                        <button onclick="processPayment(${p.id})" class="w-2/3 btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>
                     </div>
                 </div>
             `).join("");
@@ -695,14 +702,14 @@
             container.innerHTML = pending.map(p => {
                 const items = JSON.parse(p.items);
                 return `
-                    <div class="card p-3 border-orange-500/80 space-y-2">
-                        <div class="font-bold text-orange-400 text-sm">Orden #${p.id} - ${p.cliente}</div>
-                        <ul class="text-xs space-y-1 bg-slate-900 p-2 rounded">
+                    <div class="card p-3 border-l-4 border-orange-500 space-y-2">
+                        <div class="font-black text-orange-600 text-sm">Orden #${p.id} - ${p.cliente}</div>
+                        <ul class="text-xs space-y-1 bg-slate-50 p-2 rounded-lg border border-slate-200 font-medium">
                             ${items.map(i => `<li>• ${i.nombre}</li>`).join("")}
                         </ul>
                         <div class="flex gap-2">
-                            <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-700 hover:bg-slate-600 font-bold py-2 rounded text-xs text-white min-h-0">🖨 Ticket</button>
-                            <button onclick="markKitchenReady(${p.id})" class="w-2/3 bg-orange-500 hover:bg-orange-600 font-bold py-2 rounded text-xs min-h-0">✔ LISTO</button>
+                            <button onclick="reimprimirPedidoPorId(${p.id})" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>
+                            <button onclick="markKitchenReady(${p.id})" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✔ LISTO</button>
                         </div>
                     </div>
                 `;
@@ -733,18 +740,18 @@
             cobrados.forEach(p => { methods[p.metodo_pago] = (methods[p.metodo_pago] || 0) + p.total; });
 
             document.getElementById("paymentBreakdown").innerHTML = Object.keys(methods).length ? Object.entries(methods).map(([method, amt]) => `
-                <div class="bg-slate-900 p-2 rounded-lg text-center border border-slate-700">
-                    <span class="text-[10px] text-slate-400 block mb-0.5">${method}</span>
-                    <span class="text-sm font-bold text-emerald-400">$${amt.toFixed(2)}</span>
+                <div class="bg-slate-50 p-2 rounded-xl text-center border border-slate-200">
+                    <span class="text-[10px] text-slate-500 block mb-0.5 font-bold">${method}</span>
+                    <span class="text-sm font-black text-slate-900">$${amt.toFixed(2)}</span>
                 </div>
-            `).join("") : `<div class="text-slate-500 text-xs">Sin ventas registradas</div>`;
+            `).join("") : `<div class="text-slate-400 text-xs">Sin ventas registradas</div>`;
 
             document.getElementById("reportTableBody").innerHTML = orders.map(p => {
                 const items = JSON.parse(p.items).map(i => i.nombre).join(", ");
                 return `
                     <tr>
-                        <td class="p-2">#${p.id}</td>
-                        <td class="p-2 text-[11px]">${p.fecha_hora}</td>
+                        <td class="p-2 font-bold">#${p.id}</td>
+                        <td class="p-2 text-[11px] text-slate-500">${p.fecha_hora}</td>
                         <td class="p-2">${p.mesero}</td>
                         <td class="p-2">${p.fact_razon || p.cliente}</td>
                         <td class="p-2">${p.fact_ruc || 'N/A'}</td>
@@ -753,9 +760,9 @@
                         <td class="p-2">${p.fact_email || 'N/A'}</td>
                         <td class="p-2 text-[11px]">${items}</td>
                         <td class="p-2">${p.metodo_pago}</td>
-                        <td class="p-2 font-bold text-emerald-400">$${p.total.toFixed(2)}</td>
-                        <td class="p-2"><span class="px-2 py-0.5 text-[10px] rounded font-bold ${p.estado === 'cobrado' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}">${p.estado}</span></td>
-                        <td class="p-2"><button onclick="reimprimirPedidoPorId(${p.id})" class="bg-sky-600 hover:bg-sky-700 text-white text-[11px] px-2 py-1 rounded font-bold min-h-0">🖨 Ticket</button></td>
+                        <td class="p-2 font-black text-emerald-600">$${p.total.toFixed(2)}</td>
+                        <td class="p-2"><span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${p.estado === 'cobrado' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}">${p.estado}</span></td>
+                        <td class="p-2"><button onclick="reimprimirPedidoPorId(${p.id})" class="bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg font-bold min-h-0">🖨 Ticket</button></td>
                     </tr>
                 `;
             }).join("");
@@ -773,7 +780,7 @@
             if (conFactura.length === 0) return alert("No existen ventas registradas con datos de facturación.");
 
             doc.setFontSize(18);
-            doc.setTextColor(16, 185, 129);
+            doc.setTextColor(220, 38, 38);
             doc.text("⚡ New Haven POS Pro - Reporte de Facturación (Contabilidad)", 14, 15);
 
             doc.setFontSize(10);
@@ -798,7 +805,7 @@
                 body: rows,
                 styles: { fontSize: 8, cellPadding: 2 },
                 headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
-                alternateRowStyles: { fillColor: [240, 243, 246] }
+                alternateRowStyles: { fillColor: [248, 250, 252] }
             });
 
             const finalY = doc.lastAutoTable.finalY + 10;
@@ -827,11 +834,11 @@
             let qrCards = '';
             for (let i = 1; i <= count; i++) {
                 qrCards += `
-                    <div style="border: 2px solid #0f172a; border-radius: 12px; padding: 15px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <h2 style="margin: 0 0 5px 0; color: #10b981; font-size: 20px;">⚡ NEW HAVEN POS</h2>
-                        <h1 style="margin: 0 0 10px 0; color: #0f172a; font-size: 26px; font-weight: bold;">MESA ${i}</h1>
+                    <div style="border: 2px solid #0f172a; border-radius: 12px; padding: 15px; text-align: center; background: #fff; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <h2 style="margin: 0 0 5px 0; color: #dc2626; font-size: 18px; font-weight: 900;">⚡ NEW HAVEN POS</h2>
+                        <h1 style="margin: 0 0 10px 0; color: #0f172a; font-size: 24px; font-weight: 900;">MESA ${i}</h1>
                         <div id="qr_${i}" style="margin: 10px auto; display: flex; justify-content: center;"></div>
-                        <p style="margin: 10px 0 0 0; font-size: 12px; font-weight: bold; color: #334155;">📷 Escanea para ver el menú y hacer tu pedido</p>
+                        <p style="margin: 10px 0 0 0; font-size: 11px; font-weight: 700; color: #475569;">📷 Escanea para ver el menú y hacer tu pedido</p>
                     </div>
                 `;
             }
@@ -844,8 +851,8 @@
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
                     <style>
                         @page { size: A4; margin: 10mm; }
-                        body { font-family: system-ui, sans-serif; background: #f8fafc; margin: 0; padding: 10px; }
-                        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+                        body { font-family: system-ui, sans-serif; background: #fff; margin: 0; padding: 10px; }
+                        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
                     </style>
                 </head>
                 <body>
@@ -883,13 +890,13 @@
             const prods = await apiFetch("/productos") || [];
             table.innerHTML = prods.map(p => `
                 <tr>
-                    <td class="p-2">${p.imagen ? `<img src="${p.imagen}" class="w-8 h-8 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}</td>
+                    <td class="p-2">${p.imagen ? `<img src="${p.imagen}" class="w-8 h-8 object-cover rounded-md">` : `<span class="text-xs text-slate-400">Sin Foto</span>`}</td>
                     <td class="p-2 font-bold">${p.nombre}</td>
-                    <td class="p-2 text-xs text-slate-400">${p.descripcion || '-'}</td>
-                    <td class="p-2 text-emerald-400 font-bold">$${p.precio.toFixed(2)}</td>
-                    <td class="p-2"><span class="bg-slate-700 px-1.5 py-0.5 rounded text-xs">${p.categoria}</span></td>
+                    <td class="p-2 text-xs text-slate-500">${p.descripcion || '-'}</td>
+                    <td class="p-2 text-red-600 font-black">$${p.precio.toFixed(2)}</td>
+                    <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold">${p.categoria}</span></td>
                     <td class="p-2">${p.requiere_salsa ? '✅ Sí' : '❌ No'}</td>
-                    <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button></td>
+                    <td class="p-2"><button onclick="deleteProduct(${p.id})" class="text-red-600 hover:underline font-bold text-xs min-h-0">Eliminar</button></td>
                 </tr>
             `).join("");
         }
@@ -941,12 +948,12 @@
             const users = await apiFetch("/usuarios") || [];
             table.innerHTML = users.map(u => `
                 <tr>
-                    <td class="p-2">${u.nombre}</td>
-                    <td class="p-2 font-mono text-emerald-400">${u.usuario}</td>
-                    <td class="p-2"><span class="bg-slate-700 px-1.5 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
-                    <td class="p-2 flex items-center gap-2">
-                        <button onclick="changeUserPassword('${u.usuario}', '${u.nombre}', '${u.rol}')" class="text-sky-400 hover:text-sky-300 font-bold text-xs min-h-0 bg-slate-800 px-2 py-1 rounded border border-slate-700">🔑 Clave</button>
-                        <button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button>
+                    <td class="p-2 font-bold">${u.nombre}</td>
+                    <td class="p-2 font-mono text-red-600 font-bold">${u.usuario}</td>
+                    <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
+                    <td class="p-2 flex items-center gap-1.5">
+                        <button onclick="changeUserPassword('${u.usuario}', '${u.nombre}', '${u.rol}')" class="text-sky-600 font-bold text-xs min-h-0 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200">🔑 Clave</button>
+                        <button onclick="deleteUser('${u.usuario}')" class="text-red-600 font-bold text-xs min-h-0 px-1">Eliminar</button>
                     </td>
                 </tr>
             `).join("");
@@ -997,9 +1004,9 @@
             const list = document.getElementById("catList");
             const cats = await apiFetch("/categorias") || [];
             list.innerHTML = cats.map(c => `
-                <li class="py-2 flex justify-between items-center">
+                <li class="py-2 flex justify-between items-center font-medium">
                     <span>${c.nombre}</span>
-                    <button onclick="deleteCategory(${c.id})" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button>
+                    <button onclick="deleteCategory(${c.id})" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>
                 </li>
             `).join("");
         }
@@ -1030,9 +1037,9 @@
             const list = document.getElementById("sauceList");
             const sauces = await apiFetch("/salsas") || [];
             list.innerHTML = sauces.map(s => `
-                <li class="py-2 flex justify-between items-center">
+                <li class="py-2 flex justify-between items-center font-medium">
                     <span>${s.nombre}</span>
-                    <button onclick="deleteSauce(${s.id})" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button>
+                    <button onclick="deleteSauce(${s.id})" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>
                 </li>
             `).join("");
         }
