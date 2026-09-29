@@ -63,8 +63,8 @@ export default {
         return Response.json(results, { headers: corsHeaders });
       }
       if (path === "/api/productos" && method === "POST") {
-        const { nombre, precio, categoria, requiere_salsa, imagen } = await request.json();
-        await env.DB.prepare("INSERT INTO pos_productos (nombre, precio, categoria, requiere_salsa, imagen) VALUES (?, ?, ?, ?, ?)").bind(nombre, precio, categoria, requiere_salsa ? 1 : 0, imagen || "").run();
+        const { nombre, descripcion, precio, categoria, requiere_salsa, imagen } = await request.json();
+        await env.DB.prepare("INSERT INTO pos_productos (nombre, descripcion, precio, categoria, requiere_salsa, imagen) VALUES (?, ?, ?, ?, ?, ?)").bind(nombre, descripcion || "", precio, categoria, requiere_salsa ? 1 : 0, imagen || "").run();
         return Response.json({ success: true }, { headers: corsHeaders });
       }
       if (path.startsWith("/api/productos/") && method === "DELETE") {

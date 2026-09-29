@@ -23,15 +23,16 @@
         Developed by JM
     </div>
 
+    <!-- HEADER / BARRA SUPERIOR -->
     <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex justify-between items-center shrink-0 z-40 relative">
         <div class="flex items-center gap-3">
-            <button id="btnMobileMenu" onclick="toggleMobileMenu()" class="md:hidden bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-lg min-h-0 hidden">☰</button>
+            <button id="btnMobileMenu" onclick="toggleMobileMenu()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-xl font-bold min-h-0 hidden">☰</button>
             <h1 class="text-base md:text-xl font-bold text-emerald-400 flex items-center gap-1">⚡ New Haven POS</h1>
         </div>
         
         <div id="userInfo" class="flex items-center gap-2 md:gap-4 hidden">
             <span id="userBadge" class="text-xs md:text-sm font-semibold bg-slate-700 px-2.5 py-1 rounded-full truncate max-w-[130px] md:max-w-none"></span>
-            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold min-h-0">Salir</button>
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold min-h-0 hidden md:block">Salir</button>
         </div>
     </header>
 
@@ -57,10 +58,11 @@
 
     <!-- MAIN APP SCREEN -->
     <div id="appScreen" class="flex-1 flex flex-col md:flex-row overflow-hidden hidden relative">
-        <nav id="sidebar" class="w-full md:w-64 bg-slate-800 p-2 md:p-4 border-b md:border-b-0 md:border-r border-slate-700 flex md:flex-col gap-2 overflow-x-auto shrink-0 z-30"></nav>
+        <!-- MENÚ LATERAL / DESPLEGABLE EN MÓVIL -->
+        <nav id="sidebar" class="w-full md:w-64 bg-slate-800 p-3 md:p-4 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col gap-2 overflow-y-auto shrink-0 z-30 hidden md:flex absolute md:relative inset-x-0 top-0 max-h-[80vh] md:max-h-none shadow-2xl md:shadow-none"></nav>
 
         <main class="flex-1 p-3 md:p-6 overflow-y-auto">
-            <!-- VISTA: TOMAR PEDIDO -->
+            <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR -->
             <section id="viewPedido" class="hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                     <div class="lg:col-span-2 space-y-3">
@@ -71,9 +73,9 @@
                         <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 md:gap-4 p-1"></div>
                     </div>
 
-                    <div class="card p-3 md:p-4 flex flex-col h-full min-h-[400px]">
+                    <div class="card p-3 md:p-4 flex flex-col">
                         <h3 class="font-bold text-base md:text-lg mb-2 flex justify-between items-center">
-                            <span>Orden del Cliente</span>
+                            <span id="orderTitle">Orden del Cliente</span>
                             <span id="mobileCartCount" class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full lg:hidden">0 items</span>
                         </h3>
                         <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs md:text-sm mb-2">
@@ -92,14 +94,14 @@
                             <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-xs font-bold p-1 rounded min-h-0">Agregar</button>
                         </div>
 
-                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 mb-2 pr-1 min-h-[120px] max-h-[300px]"></div>
+                        <div id="cartItems" class="flex-1 overflow-y-auto space-y-1.5 mb-2 pr-1 min-h-[120px] max-h-[250px]"></div>
 
                         <div class="border-t border-slate-700 pt-2 mt-auto">
                             <div class="flex justify-between items-center text-base md:text-lg font-bold text-emerald-400 mb-2">
                                 <span>TOTAL:</span>
                                 <span id="cartTotal">$0.00</span>
                             </div>
-                            <button onclick="submitOrder()" class="w-full btn-primary p-2.5 rounded-lg text-sm md:text-base">🚀 REGISTRAR PEDIDO</button>
+                            <button onclick="submitOrder()" class="w-full btn-primary p-2.5 rounded-lg text-sm md:text-base">🚀 ENVIAR PEDIDO</button>
                         </div>
                     </div>
                 </div>
@@ -160,14 +162,26 @@
             <section id="viewAdmin" class="hidden space-y-4 md:space-y-6">
                 <h2 class="text-xl md:text-2xl font-bold text-purple-400">⚙️ Configuración del Sistema</h2>
 
+                <!-- APARTADO CÓDIGOS QR DE MESAS -->
+                <div class="card p-4 md:p-6 space-y-4 border-l-4 border-sky-500">
+                    <h3 class="font-bold text-base md:text-lg text-sky-400">📱 Códigos QR para Autopedido en Mesas</h3>
+                    <p class="text-xs text-slate-400">Genera e imprime los códigos QR que irán pegados en las mesas para que los clientes escaneen y pidan directamente.</p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="text-xs md:text-sm font-bold text-slate-300">Número total de mesas:</label>
+                        <input type="number" id="qrTableCount" value="10" min="1" max="50" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white w-24">
+                        <button onclick="imprimirCodigosQR()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded text-xs md:text-sm flex items-center gap-2">🖨 Imprimir QR de Mesas</button>
+                    </div>
+                </div>
+
                 <div class="card p-4 md:p-6 space-y-4 border-l-4 border-emerald-500">
                     <h3 class="font-bold text-base md:text-lg text-emerald-400">🍔 Gestión de Productos</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2.5">
                         <input type="text" id="newProdName" placeholder="Nombre Producto" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
+                        <input type="text" id="newProdDesc" placeholder="Detalle / Contenido (Ej: Pan, Pechuga, Queso)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white md:col-span-2">
                         <input type="number" step="0.01" id="newProdPrice" placeholder="Precio ($)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white">
                         <select id="newProdCategory" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-white"></select>
                         <input type="file" id="newProdImage" accept="image/*" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-300">
-                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded p-2 text-xs">
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded p-2 text-xs md:col-span-2">
                             <input type="checkbox" id="newProdSauce" class="rounded border-slate-700 text-emerald-500">
                             <label for="newProdSauce" class="text-slate-300">¿Salsa / Término?</label>
                         </div>
@@ -178,7 +192,7 @@
                         <table class="w-full text-left text-xs md:text-sm">
                             <thead class="bg-slate-700 text-slate-300">
                                 <tr>
-                                    <th class="p-2">Foto</th><th class="p-2">Producto</th><th class="p-2">Precio</th><th class="p-2">Sección</th><th class="p-2">Salsa</th><th class="p-2">Acción</th>
+                                    <th class="p-2">Foto</th><th class="p-2">Producto</th><th class="p-2">Detalle/Contenido</th><th class="p-2">Precio</th><th class="p-2">Sección</th><th class="p-2">Salsa</th><th class="p-2">Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="productsTableBody" class="divide-y divide-slate-700"></tbody>
@@ -280,6 +294,32 @@
         let cart = [];
         let currentModalItem = null;
         let tempFacturaData = null;
+        let isCustomerMode = false;
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mesaParam = urlParams.get('mesa');
+
+            if (mesaParam) {
+                isCustomerMode = true;
+                currentUser = { nombre: "Cliente QR", rol: "cliente" };
+
+                document.getElementById("loginScreen").classList.add("hidden");
+                document.getElementById("appScreen").classList.remove("hidden");
+                document.getElementById("userInfo").classList.remove("hidden");
+                document.getElementById("btnMobileMenu").classList.add("hidden");
+
+                if (mesaParam.toLowerCase() !== 'qr') {
+                    document.getElementById("orderClient").value = `Mesa ${mesaParam}`;
+                    document.getElementById("userBadge").innerText = `📱 Mesa ${mesaParam}`;
+                } else {
+                    document.getElementById("userBadge").innerText = `📱 Pedido QR`;
+                }
+
+                document.getElementById("orderTitle").innerText = "✨ Tu Orden";
+                setupNavigation();
+            }
+        };
 
         async function apiFetch(endpoint, options = {}) {
             try {
@@ -301,9 +341,11 @@
                 const user = users.find(x => x.usuario === u && x.clave === p);
                 if (user) {
                     currentUser = user;
+                    isCustomerMode = false;
                     document.getElementById("loginScreen").classList.add("hidden");
                     document.getElementById("appScreen").classList.remove("hidden");
                     document.getElementById("userInfo").classList.remove("hidden");
+                    document.getElementById("btnMobileMenu").classList.remove("hidden");
                     document.getElementById("userBadge").innerText = `${user.nombre} (${user.rol.toUpperCase()})`;
                     setupNavigation();
                     return;
@@ -313,7 +355,10 @@
         }
 
         function logout() {
-            currentUser = null; cart = []; tempFacturaData = null;
+            currentUser = null; cart = []; tempFacturaData = null; isCustomerMode = false;
+            if (window.location.search) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
             document.getElementById("appScreen").classList.add("hidden");
             document.getElementById("userInfo").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
@@ -326,8 +371,12 @@
 
         function setupNavigation() {
             const nav = document.getElementById("sidebar");
-            const btnMenu = document.getElementById("btnMobileMenu");
             nav.innerHTML = "";
+
+            if (isCustomerMode) {
+                switchView("Pedido");
+                return;
+            }
 
             const views = {
                 "mesero": [{ id: "Pedido", name: "📝 Tomar Pedido" }],
@@ -349,8 +398,6 @@
             };
 
             const allowed = views[currentUser.rol] || views["mesero"];
-            if (allowed.length > 1) btnMenu.classList.remove("hidden");
-            else btnMenu.classList.add("hidden");
 
             allowed.forEach((v, index) => {
                 const btn = document.createElement("button");
@@ -363,6 +410,12 @@
                 nav.appendChild(btn);
                 if (index === 0) switchView(v.id);
             });
+
+            const logoutMobileBtn = document.createElement("button");
+            logoutMobileBtn.className = "w-full text-left p-3 rounded-lg font-bold bg-red-600 hover:bg-red-700 transition text-xs md:hidden shrink-0 min-h-0 mt-2";
+            logoutMobileBtn.innerText = "🚪 Cerrar Sesión";
+            logoutMobileBtn.onclick = logout;
+            nav.appendChild(logoutMobileBtn);
         }
 
         function switchView(viewId) {
@@ -411,7 +464,8 @@
             catalogGrid.innerHTML = prods.map(p => `
                 <div class="card p-2.5 flex flex-col justify-between items-center text-center">
                     ${p.imagen ? `<img src="${p.imagen}" class="w-full h-20 md:h-24 object-cover rounded-lg mb-1.5 border border-slate-700">` : `<div class="w-full h-20 md:h-24 bg-slate-800 rounded-lg flex items-center justify-center text-2xl mb-1.5 text-slate-600">🍔</div>`}
-                    <div class="font-bold text-xs md:text-sm mb-1 leading-tight">${p.nombre}</div>
+                    <div class="font-bold text-xs md:text-sm mb-0.5 leading-tight">${p.nombre}</div>
+                    ${p.descripcion ? `<div class="text-[10px] md:text-xs text-slate-400 mb-1 leading-tight line-clamp-2">${p.descripcion}</div>` : ''}
                     <div class="text-emerald-400 font-bold text-xs md:text-sm mb-1.5">$${p.precio.toFixed(2)}</div>
                     <button onclick="handleAddToCart(${p.id}, '${p.nombre}', ${p.precio}, ${p.requiere_salsa})" class="w-full btn-primary py-1 px-2 rounded text-xs min-h-0">Agregar +</button>
                 </div>
@@ -477,14 +531,17 @@
 
         async function submitOrder() {
             const client = document.getElementById("orderClient").value.trim();
-            if (!client) return alert("Ingresa el nombre del cliente o mesa.");
-            if (cart.length === 0) return alert("El carrito está vacío.");
+            if (!client) return alert("Por favor ingresa tu Nombre o Número de Mesa.");
+            if (cart.length === 0) return alert("El carrito está vacío. Agrega productos antes de enviar.");
 
             const total = cart.reduce((acc, i) => acc + i.precio, 0);
             const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
+            const meseroNombre = isCustomerMode ? "📱 Cliente QR" : currentUser.nombre;
+            const clienteFinal = isCustomerMode ? `[QR] ${client}` : client;
+
             const orderData = {
-                cliente: client,
+                cliente: clienteFinal,
                 fact_ruc: tempFacturaData ? tempFacturaData.ruc : "Consumidor Final",
                 fact_razon: tempFacturaData ? tempFacturaData.razon : client,
                 fact_dir: tempFacturaData ? tempFacturaData.dir : "N/A",
@@ -493,7 +550,7 @@
                 items: JSON.stringify(cart),
                 total: total,
                 estado: "pendiente",
-                mesero: currentUser.nombre,
+                mesero: meseroNombre,
                 metodo_pago: "Efectivo",
                 fecha_hora: now
             };
@@ -505,13 +562,16 @@
             });
 
             if (res && res.success) {
-                imprimirTicketCocina(res.id || 'NUEVO', client, cart, currentUser.nombre, now);
+                if (isCustomerMode) {
+                    alert("🎉 ¡Tu pedido ha sido enviado con éxito a la cocina!");
+                } else {
+                    imprimirTicketCocina(res.id || 'NUEVO', client, cart, currentUser.nombre, now);
+                }
                 cart = []; tempFacturaData = null;
-                document.getElementById("orderClient").value = "";
                 document.getElementById("facturaBadge").classList.add("hidden");
                 renderCart();
             } else {
-                alert("Error al guardar el pedido en el servidor.");
+                alert("Error al enviar el pedido. Por favor intenta de nuevo.");
             }
         }
 
@@ -756,6 +816,62 @@
             renderProductsTable();
         }
 
+        function imprimirCodigosQR() {
+            const count = parseInt(document.getElementById("qrTableCount").value) || 10;
+            const baseUrl = window.location.origin + window.location.pathname;
+
+            const printWin = window.open('', '_blank', 'width=800,height=900');
+            if (!printWin) return alert("Por favor permite las ventanas emergentes para abrir la hoja de impresión.");
+
+            let qrCards = '';
+            for (let i = 1; i <= count; i++) {
+                qrCards += `
+                    <div style="border: 2px solid #0f172a; border-radius: 12px; padding: 15px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <h2 style="margin: 0 0 5px 0; color: #10b981; font-size: 20px;">⚡ NEW HAVEN POS</h2>
+                        <h1 style="margin: 0 0 10px 0; color: #0f172a; font-size: 26px; font-weight: bold;">MESA ${i}</h1>
+                        <div id="qr_${i}" style="margin: 10px auto; display: flex; justify-content: center;"></div>
+                        <p style="margin: 10px 0 0 0; font-size: 12px; font-weight: bold; color: #334155;">📷 Escanea para ver el menú y hacer tu pedido</p>
+                    </div>
+                `;
+            }
+
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Impresión de Códigos QR para Mesas</title>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                    <style>
+                        @page { size: A4; margin: 10mm; }
+                        body { font-family: system-ui, sans-serif; background: #f8fafc; margin: 0; padding: 10px; }
+                        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="grid-container">${qrCards}</div>
+                    <script>
+                        window.onload = function() {
+                            const baseUrl = "${baseUrl}";
+                            const total = ${count};
+                            for (let i = 1; i <= total; i++) {
+                                new QRCode(document.getElementById("qr_" + i), {
+                                    text: baseUrl + "?mesa=" + i,
+                                    width: 140,
+                                    height: 140
+                                });
+                            }
+                            setTimeout(function() { window.print(); }, 800);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            printWin.document.open();
+            printWin.document.write(htmlContent);
+            printWin.document.close();
+        }
+
         async function renderProductsTable() {
             const table = document.getElementById("productsTableBody");
             const catSelect = document.getElementById("newProdCategory");
@@ -768,6 +884,7 @@
                 <tr>
                     <td class="p-2">${p.imagen ? `<img src="${p.imagen}" class="w-8 h-8 object-cover rounded">` : `<span class="text-xs text-slate-500">Sin Foto</span>`}</td>
                     <td class="p-2 font-bold">${p.nombre}</td>
+                    <td class="p-2 text-xs text-slate-400">${p.descripcion || '-'}</td>
                     <td class="p-2 text-emerald-400 font-bold">$${p.precio.toFixed(2)}</td>
                     <td class="p-2"><span class="bg-slate-700 px-1.5 py-0.5 rounded text-xs">${p.categoria}</span></td>
                     <td class="p-2">${p.requiere_salsa ? '✅ Sí' : '❌ No'}</td>
@@ -778,6 +895,7 @@
 
         async function addProduct() {
             const name = document.getElementById("newProdName").value.trim();
+            const desc = document.getElementById("newProdDesc").value.trim();
             const price = parseFloat(document.getElementById("newProdPrice").value);
             const category = document.getElementById("newProdCategory").value;
             const requiresSauce = document.getElementById("newProdSauce").checked;
@@ -791,10 +909,11 @@
             await apiFetch("/productos", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre: name, precio: price, categoria: category, requiere_salsa: requiresSauce, imagen: imageBase64 })
+                body: JSON.stringify({ nombre: name, descripcion: desc, precio: price, categoria: category, requiere_salsa: requiresSauce, imagen: imageBase64 })
             });
 
             document.getElementById("newProdName").value = "";
+            document.getElementById("newProdDesc").value = "";
             document.getElementById("newProdPrice").value = "";
             document.getElementById("newProdSauce").checked = false;
             document.getElementById("newProdImage").value = "";
@@ -822,11 +941,28 @@
             table.innerHTML = users.map(u => `
                 <tr>
                     <td class="p-2">${u.nombre}</td>
-                    <td class="p-2">${u.usuario}</td>
+                    <td class="p-2 font-mono text-emerald-400">${u.usuario}</td>
                     <td class="p-2"><span class="bg-slate-700 px-1.5 py-0.5 rounded text-xs font-bold uppercase">${u.rol}</span></td>
-                    <td class="p-2"><button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button></td>
+                    <td class="p-2 flex items-center gap-2">
+                        <button onclick="changeUserPassword('${u.usuario}', '${u.nombre}', '${u.rol}')" class="text-sky-400 hover:text-sky-300 font-bold text-xs min-h-0 bg-slate-800 px-2 py-1 rounded border border-slate-700">🔑 Clave</button>
+                        <button onclick="deleteUser('${u.usuario}')" class="text-red-400 hover:text-red-300 font-bold text-xs min-h-0">Eliminar</button>
+                    </td>
                 </tr>
             `).join("");
+        }
+
+        async function changeUserPassword(username, name, role) {
+            const newPass = prompt(`Ingresa la nueva contraseña para el usuario "${username}" (${name}):`);
+            if (!newPass || !newPass.trim()) return;
+
+            await apiFetch("/usuarios", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ usuario: username, clave: newPass.trim(), nombre: name, rol: role })
+            });
+
+            alert(`✅ La contraseña de ${username} ha sido actualizada exitosamente.`);
+            renderUsersTable();
         }
 
         async function addUser() {
@@ -850,8 +986,7 @@
         }
 
         async function deleteUser(username) {
-            if(username === "admin") return alert("No se puede eliminar el usuario principal admin.");
-            if(!confirm(`¿Eliminar usuario ${username}?`)) return;
+            if(!confirm(`¿Seguro que deseas eliminar el usuario "${username}"?`)) return;
 
             await apiFetch(`/usuarios/${username}`, { method: "DELETE" });
             renderUsersTable();
