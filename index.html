@@ -305,12 +305,17 @@
         </div>
     </div>
 
+    <!-- MODAL DE SELECCIÓN DE HASTA 2 SALSAS -->
     <div id="sauceModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
         <div class="card p-4 w-full max-w-md space-y-3">
             <h3 id="modalTitle" class="font-black text-sm text-slate-900 uppercase"></h3>
             <div>
-                <label class="text-[11px] font-bold text-slate-600 block mb-1">Selecciona Salsa o Término:</label>
-                <select id="modalSauceSelect" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></select>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Salsa / Término #1 (Obligatoria):</label>
+                <select id="modalSauceSelect1" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></select>
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Salsa / Término #2 (Opcional):</label>
+                <select id="modalSauceSelect2" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></select>
             </div>
             <div>
                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Nota adicional (Opcional):</label>
@@ -318,7 +323,7 @@
             </div>
             <div class="flex gap-2 justify-end pt-2">
                 <button onclick="closeSauceModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
-                <button onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Agregar</button>
+                <button onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Agregar al Pedido</button>
             </div>
         </div>
     </div>
@@ -581,7 +586,13 @@
                 currentModalItem = { id, nombre, precio };
                 document.getElementById("modalTitle").innerText = `Opciones para: ${nombre}`;
                 const salsas = await apiFetch("/salsas") || [];
-                document.getElementById("modalSauceSelect").innerHTML = salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
+                
+                const select1 = document.getElementById("modalSauceSelect1");
+                const select2 = document.getElementById("modalSauceSelect2");
+
+                select1.innerHTML = salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
+                select2.innerHTML = `<option value="">-- Ninguna (Solo 1 salsa) --</option>` + salsas.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join("");
+
                 document.getElementById("sauceModal").classList.remove("hidden");
             } else {
                 addItemToCart(nombre, precio);
@@ -591,9 +602,16 @@
         function closeSauceModal() { document.getElementById("sauceModal").classList.add("hidden"); }
 
         function confirmSauceModal() {
-            const sauce = document.getElementById("modalSauceSelect").value;
+            const sauce1 = document.getElementById("modalSauceSelect1").value;
+            const sauce2 = document.getElementById("modalSauceSelect2").value;
             const note = document.getElementById("modalNoteInput").value.trim();
-            let name = `${currentModalItem.nombre} [${sauce}]`;
+
+            let saucesText = sauce1;
+            if (sauce2 && sauce2 !== sauce1) {
+                saucesText += ` + ${sauce2}`;
+            }
+
+            let name = `${currentModalItem.nombre} [${saucesText}]`;
             if (note) name += ` (${note})`;
             
             addItemToCart(name, currentModalItem.precio);
@@ -615,7 +633,6 @@
             const existingIndex = cart.findIndex(item => item.nombre === nombre);
             if (existingIndex > -1) {
                 cart[existingIndex].cantidad += 1;
-                // Movemos el ítem al inicio del arreglo para que aparezca arriba
                 const [item] = cart.splice(existingIndex, 1);
                 cart.unshift(item);
             } else {
