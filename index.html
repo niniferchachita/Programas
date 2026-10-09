@@ -20,7 +20,7 @@
 </head>
 <body class="min-h-screen flex flex-col relative bg-slate-100 text-slate-800">
 
-    <!-- OVERLAY PARA MÓVIL (SÓLO EN PANTALLAS PEQUEÑAS) -->
+    <!-- OVERLAY PARA MÓVIL -->
     <div id="drawerOverlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/60 z-40 hidden transition-opacity md:!hidden"></div>
 
     <!-- HEADER / BARRA SUPERIOR -->
@@ -80,7 +80,7 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <div id="appScreen" class="flex-1 flex overflow-hidden hidden relative">
-        <!-- MENÚ LATERAL: FIJO EN COMPUTADORAS (md:flex md:static md:translate-x-0 md:w-64), DESPLEGABLE EN MÓVIL -->
+        <!-- MENÚ LATERAL -->
         <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col p-4 shadow-2xl md:shadow-none border-r border-slate-200 md:static md:w-64 shrink-0">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2">
@@ -106,7 +106,7 @@
         </aside>
 
         <main class="flex-1 p-3 md:p-6 overflow-y-auto">
-            <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR -->
+            <!-- VISTA: TOMAR PEDIDO -->
             <section id="viewPedido" class="hidden space-y-4">
                 <div class="flex flex-col gap-4">
                     <!-- CARRITO Y RESUMEN -->
@@ -306,7 +306,7 @@
         </main>
     </div>
 
-    <!-- MODALES -->
+    <!-- MODAL DE DATOS DE FACTURA -->
     <div id="facturaModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
         <div class="card p-4 w-full max-w-md space-y-3 max-h-[90vh] overflow-y-auto">
             <h3 class="font-black text-sm text-sky-600 uppercase">📄 Datos de Facturación</h3>
@@ -347,6 +347,38 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDICIÓN DE PEDIDO ANTES DE COBRAR -->
+    <div id="editOrderModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
+        <div class="card p-4 w-full max-w-lg space-y-3 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 id="editOrderTitle" class="font-black text-sm text-slate-900 uppercase">✏️ Editar Pedido #</h3>
+                <button onclick="closeEditOrderModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg min-h-0">✕</button>
+            </div>
+            
+            <!-- AGREGAR NUEVO PRODUCTO AL PEDIDO -->
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                <span class="text-[11px] font-bold text-slate-700 block">➕ Agregar Producto al Pedido</span>
+                <div class="flex gap-2">
+                    <select id="editAddProdSelect" class="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs"></select>
+                    <button onclick="addProdToEditingOrder()" class="btn-primary px-3 py-2 rounded-lg text-xs min-h-0">Agregar</button>
+                </div>
+            </div>
+
+            <!-- LISTA DE PRODUCTOS DEL PEDIDO EDITABLE -->
+            <div id="editOrderItemsList" class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[150px]"></div>
+
+            <div class="border-t border-slate-200 pt-3 flex justify-between items-center">
+                <div class="text-base font-black text-slate-900">
+                    NUEVO TOTAL: <span id="editOrderTotal" class="text-red-600">$0.00</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeEditOrderModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
+                    <button onclick="saveOrderEdits()" class="btn-primary px-4 py-2 rounded-xl text-xs min-h-0">💾 Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = "https://comi-rap-api.niniferchachita1999.workers.dev/api";
 
@@ -356,6 +388,11 @@
         let tempFacturaData = null;
         let isCustomerMode = false;
         let currentGlobalLogo = null;
+
+        // VARIABLES PARA LA EDICIÓN DE PEDIDOS
+        let currentEditingOrder = null;
+        let currentEditingItems = [];
+        let allProductsCache = [];
 
         window.onload = function() {
             loadSavedLogo();
@@ -504,6 +541,9 @@
         }
 
         function setupNavigation() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.remove("hidden", "-translate-x-full");
+
             const nav = document.getElementById("navContainer");
             nav.innerHTML = "";
 
@@ -586,6 +626,7 @@
             if(currentVal) catSelect.value = currentVal;
 
             let prods = await apiFetch("/productos") || [];
+            allProductsCache = prods;
             if(catSelect.value && catSelect.value !== "Todas") {
                 prods = prods.filter(p => p.categoria === catSelect.value);
             }
@@ -797,28 +838,158 @@
             const pending = orders.filter(p => p.estado !== "cobrado" && p.estado !== "anulado");
             
             container.innerHTML = pending.map(p => {
-                return '<div class="card p-3 space-y-2">' +
+                const itemsList = typeof p.items === 'string' ? JSON.parse(p.items) : p.items;
+                
+                // Generar lista detallada de productos para transparencia con el cliente
+                const itemsDetailHtml = itemsList.map(i => {
+                    const qty = i.cantidad || 1;
+                    const sub = i.precio * qty;
+                    return '<div class="flex justify-between items-center text-[11px] py-0.5 border-b border-slate-100 last:border-0">' +
+                        '<span class="text-slate-800 font-medium"><b class="text-slate-900">' + qty + 'x</b> ' + i.nombre + '</span>' +
+                        '<span class="text-slate-600 font-bold">$' + sub.toFixed(2) + '</span>' +
+                    '</div>';
+                }).join("");
+
+                return '<div class="card p-3 space-y-2.5">' +
                     '<div class="flex justify-between items-center">' +
                         '<span class="font-black text-sky-600 text-sm">Orden #' + p.id + ' - ' + p.cliente + '</span>' +
-                        '<span class="text-[11px] text-slate-500 font-bold">' + p.mesero + '</span>' +
+                        '<span class="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">' + p.mesero + '</span>' +
                     '</div>' +
+
+                    '<!-- DETALLE VISIBLE DE CONSUMO PARA EL CLIENTE -->' +
+                    '<div class="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1">' +
+                        '<span class="text-[10px] font-black text-amber-800 uppercase tracking-wider block mb-1">🛒 Detalle del Consumo:</span>' +
+                        '<div class="space-y-0.5 max-h-32 overflow-y-auto pr-1">' + itemsDetailHtml + '</div>' +
+                    '</div>' +
+
                     '<div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg space-y-0.5 border border-slate-200">' +
                         '<div>Razón Social: <span class="text-slate-900 font-bold">' + (p.fact_razon || p.cliente) + '</span></div>' +
                         '<div>RUC/CI: <span class="text-slate-900 font-bold">' + (p.fact_ruc || 'N/A') + '</span></div>' +
                         '<div>Dir: <span class="text-slate-900 font-bold">' + (p.fact_dir || 'N/A') + '</span></div>' +
                     '</div>' +
-                    '<div class="text-xl font-black text-slate-900">$' + p.total.toFixed(2) + '</div>' +
+
+                    '<div class="flex justify-between items-center bg-slate-900 text-white p-2.5 rounded-xl">' +
+                        '<span class="text-xs font-bold uppercase tracking-wider">Monto Total:</span>' +
+                        '<span class="text-xl font-black text-emerald-400">$' + p.total.toFixed(2) + '</span>' +
+                    '</div>' +
+
                     '<select id="payMethod_' + p.id + '" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">' +
                         '<option value="Efectivo">Efectivo</option>' +
                         '<option value="Transf. Banco de Loja">Transf. Banco de Loja</option>' +
                         '<option value="Transf. Banco Pichincha">Transf. Banco Pichincha</option>' +
                     '</select>' +
-                    '<div class="flex gap-2">' +
-                        '<button onclick="reimprimirPedidoPorId(' + p.id + ')" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
-                        '<button onclick="processPayment(' + p.id + ')" class="w-2/3 btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>' +
+
+                    '<div class="grid grid-cols-3 gap-1.5 pt-1">' +
+                        '<button onclick="reimprimirPedidoPorId(' + p.id + ')" class="bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
+                        '<button onclick="openEditOrderModal(' + p.id + ')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✏️ Editar</button>' +
+                        '<button onclick="processPayment(' + p.id + ')" class="btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>' +
                     '</div>' +
                 '</div>';
             }).join("");
+        }
+
+        // FUNCIONES DE EDICIÓN DE PEDIDO
+        async function openEditOrderModal(orderId) {
+            const orders = await apiFetch("/pedidos") || [];
+            currentEditingOrder = orders.find(x => x.id === orderId);
+            if (!currentEditingOrder) return alert("No se encontró la orden.");
+
+            currentEditingItems = typeof currentEditingOrder.items === 'string' ? JSON.parse(currentEditingOrder.items) : [...currentEditingOrder.items];
+
+            document.getElementById("editOrderTitle").innerText = "✏️ Editar Pedido #" + currentEditingOrder.id + " - " + currentEditingOrder.cliente;
+
+            if (!allProductsCache.length) {
+                allProductsCache = await apiFetch("/productos") || [];
+            }
+            
+            const select = document.getElementById("editAddProdSelect");
+            select.innerHTML = allProductsCache.map(p => '<option value="' + p.id + '">' + p.nombre + ' ($' + p.precio.toFixed(2) + ')</option>').join("");
+
+            renderEditOrderItems();
+            document.getElementById("editOrderModal").classList.remove("hidden");
+        }
+
+        function closeEditOrderModal() {
+            document.getElementById("editOrderModal").classList.add("hidden");
+            currentEditingOrder = null;
+            currentEditingItems = [];
+        }
+
+        function renderEditOrderItems() {
+            const container = document.getElementById("editOrderItemsList");
+            let total = 0;
+
+            container.innerHTML = currentEditingItems.map((item, idx) => {
+                const subtotal = item.precio * (item.cantidad || 1);
+                total += subtotal;
+                return '<div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl text-xs border border-slate-200">' +
+                    '<div class="flex flex-col max-w-[180px]">' +
+                        '<span class="font-bold text-slate-800 truncate">' + item.nombre + '</span>' +
+                        '<span class="text-[10px] text-slate-500 font-semibold">$' + item.precio.toFixed(2) + ' c/u</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2 shrink-0">' +
+                        '<div class="flex items-center bg-white border border-slate-300 rounded-lg">' +
+                            '<button onclick="updateEditItemQty(' + idx + ', -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>' +
+                            '<span class="px-2 font-black text-slate-900 text-xs">' + (item.cantidad || 1) + '</span>' +
+                            '<button onclick="updateEditItemQty(' + idx + ', 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>' +
+                        '</div>' +
+                        '<span class="text-red-600 font-black min-w-[50px] text-right">$' + subtotal.toFixed(2) + '</span>' +
+                        '<button onclick="currentEditingItems.splice(' + idx + ', 1); renderEditOrderItems();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1 text-sm">✕</button>' +
+                    '</div>' +
+                '</div>';
+            }).join("");
+
+            document.getElementById("editOrderTotal").innerText = "$" + total.toFixed(2);
+        }
+
+        function updateEditItemQty(idx, change) {
+            if (!currentEditingItems[idx].cantidad) currentEditingItems[idx].cantidad = 1;
+            currentEditingItems[idx].cantidad += change;
+
+            if (currentEditingItems[idx].cantidad <= 0) {
+                currentEditingItems.splice(idx, 1);
+            }
+            renderEditOrderItems();
+        }
+
+        function addProdToEditingOrder() {
+            const prodId = parseInt(document.getElementById("editAddProdSelect").value);
+            const prod = allProductsCache.find(p => p.id === prodId);
+            if (!prod) return;
+
+            const existingIdx = currentEditingItems.findIndex(i => i.nombre === prod.nombre);
+            if (existingIdx > -1) {
+                currentEditingItems[existingIdx].cantidad = (currentEditingItems[existingIdx].cantidad || 1) + 1;
+            } else {
+                currentEditingItems.push({ nombre: prod.nombre, precio: prod.precio, cantidad: 1 });
+            }
+            renderEditOrderItems();
+        }
+
+        async function saveOrderEdits() {
+            if (!currentEditingOrder) return;
+            if (currentEditingItems.length === 0) {
+                if (!confirm("El pedido quedó sin productos. ¿Deseas anular la orden?")) return;
+            }
+
+            const newTotal = currentEditingItems.reduce((acc, i) => acc + (i.precio * (i.cantidad || 1)), 0);
+
+            const res = await apiFetch("/pedidos/" + currentEditingOrder.id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: JSON.stringify(currentEditingItems),
+                    total: newTotal
+                })
+            });
+
+            if (res && res.success) {
+                alert("✅ Pedido #" + currentEditingOrder.id + " modificado con éxito.");
+                closeEditOrderModal();
+                renderCaja();
+            } else {
+                alert("Error al actualizar la orden.");
+            }
         }
 
         async function processPayment(orderId) {
@@ -1001,6 +1172,7 @@
             catSelect.innerHTML = cats.map(c => '<option value="' + c.nombre + '">' + c.nombre + '</option>').join("");
 
             const prods = await apiFetch("/productos") || [];
+            allProductsCache = prods;
             table.innerHTML = prods.map(p => {
                 return '<tr>' +
                     '<td class="p-2">' + (p.imagen ? '<img src="' + p.imagen + '" class="w-8 h-8 object-cover rounded-md">' : '<span class="text-xs text-slate-400">Sin Foto</span>') + '</td>' +
