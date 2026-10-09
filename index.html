@@ -45,7 +45,7 @@
                 <span id="userBadge" class="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200"></span>
             </div>
             <!-- BOTÓN HAMBURGUESA VISIBLE ÚNICAMENTE EN MÓVILES (<768px) -->
-            <button id="btnMobileMenu" onclick="toggleMobileMenu()" class="text-slate-800 text-2xl font-bold p-1 focus:outline-none hidden md:!hidden">☰</button>
+            <button id="btnMobileMenu" type="button" onclick="toggleMobileMenu()" class="text-slate-800 text-2xl font-bold p-1 focus:outline-none hidden md:!hidden">☰</button>
         </div>
     </header>
 
@@ -63,7 +63,7 @@
             </div>
             <h2 class="text-2xl font-black text-slate-900 mb-0.5">RestControl Pro</h2>
             <p class="text-slate-500 text-xs mb-6 font-semibold uppercase tracking-wider">Sistema de Gestión Gastronómica</p>
-            <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
                 <div>
                     <label class="text-xs text-slate-600 font-bold block mb-1">Usuario</label>
                     <input type="text" id="loginUser" placeholder="Ingresa tu usuario" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 text-sm focus:outline-none focus:border-red-500" required>
@@ -94,11 +94,11 @@
                     </div>
                     <span class="font-black text-slate-900 text-xs tracking-wider uppercase">RestControl Pro</span>
                 </div>
-                <button onclick="toggleMobileMenu()" class="text-slate-500 font-bold text-lg md:hidden">✕</button>
+                <button type="button" onclick="toggleMobileMenu()" class="text-slate-500 font-bold text-lg md:hidden">✕</button>
             </div>
             <nav id="navContainer" class="flex-1 space-y-2 overflow-y-auto"></nav>
             <div class="pt-4 border-t border-slate-100 mt-auto">
-                <button onclick="logout()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold p-3 rounded-xl text-xs flex items-center justify-center gap-2 min-h-0">
+                <button type="button" onclick="logout()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold p-3 rounded-xl text-xs flex items-center justify-center gap-2 min-h-0">
                     🚪 CERRAR SESIÓN
                 </button>
                 <div class="text-[10px] text-center text-slate-400 font-semibold mt-3">Developed by JM</div>
@@ -118,7 +118,7 @@
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <input type="text" id="orderClient" placeholder="Nombre Cliente / # Mesa" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800">
-                            <button onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2.5 rounded-xl flex items-center justify-center gap-1 min-h-0">📄 Datos de Factura</button>
+                            <button type="button" onclick="openFacturaModal()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs p-2.5 rounded-xl flex items-center justify-center gap-1 min-h-0">📄 Datos de Factura</button>
                         </div>
                         <div id="facturaBadge" class="hidden text-xs text-emerald-600 font-bold bg-emerald-50 p-1.5 rounded-lg text-center border border-emerald-200">✅ Datos cargados</div>
 
@@ -128,7 +128,7 @@
                                 <input type="text" id="customItemDesc" placeholder="Descripción" class="w-2/3 bg-white border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">
                                 <input type="number" id="customItemPrice" placeholder="Precio $" class="w-1/3 bg-white border border-slate-300 rounded-lg p-1.5 text-xs text-slate-800">
                             </div>
-                            <button onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold p-1.5 rounded-lg min-h-0">Agregar Item</button>
+                            <button type="button" onclick="addCustomItem()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold p-1.5 rounded-lg min-h-0">Agregar Item</button>
                         </div>
 
                         <div id="cartItems" class="overflow-y-auto space-y-1.5 my-2 pr-1 min-h-[100px] max-h-[200px]"></div>
@@ -138,7 +138,7 @@
                                 <span>TOTAL:</span>
                                 <span id="cartTotal" class="text-red-600">$0.00</span>
                             </div>
-                            <button onclick="submitOrder()" class="w-full sm:w-auto sm:px-8 btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">🚀 ENVIAR PEDIDO</button>
+                            <button type="button" onclick="submitOrder()" class="w-full sm:w-auto sm:px-8 btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">🚀 ENVIAR PEDIDO</button>
                         </div>
                     </div>
 
@@ -169,7 +169,7 @@
             <section id="viewReportes" class="hidden space-y-4">
                 <div class="flex justify-between items-center flex-wrap gap-2">
                     <h2 class="text-lg font-black text-slate-900 uppercase">📊 Reportes y Facturación</h2>
-                    <button onclick="generarFacturaCompletaContadoraPDF()" class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2">📄 Descargar PDF</button>
+                    <button type="button" onclick="generarFacturaCompletaContadoraPDF()" class="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2">📄 Descargar PDF</button>
                 </div>
                 <div class="card p-3 flex items-center gap-3">
                     <label class="font-bold text-xs">📅 Fecha:</label>
@@ -214,8 +214,8 @@
                     <p class="text-xs text-slate-500 font-medium">Sube tu propio logo si deseas reemplazar el logo por defecto de RestControl Pro.</p>
                     <div class="flex flex-wrap items-center gap-3">
                         <input type="file" id="logoFileInput" accept="image/*" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs text-slate-700">
-                        <button onclick="uploadBusinessLogo()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs">💾 Guardar Logo en la Nube</button>
-                        <button onclick="removeBusinessLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs">🗑️ Quitar Logo Personalizado</button>
+                        <button type="button" onclick="uploadBusinessLogo()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs">💾 Guardar Logo en la Nube</button>
+                        <button type="button" onclick="removeBusinessLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs">🗑️ Quitar Logo Personalizado</button>
                     </div>
                 </div>
 
@@ -224,7 +224,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <label class="text-xs font-bold text-slate-700">Total mesas:</label>
                         <input type="number" id="qrTableCount" value="10" min="1" max="50" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs text-slate-800 w-20">
-                        <button onclick="imprimirCodigosQR()" class="bg-sky-600 text-white font-bold px-3 py-2 rounded-xl text-xs">🖨 Imprimir QR</button>
+                        <button type="button" onclick="imprimirCodigosQR()" class="bg-sky-600 text-white font-bold px-3 py-2 rounded-xl text-xs">🖨 Imprimir QR</button>
                     </div>
                 </div>
 
@@ -241,7 +241,7 @@
                             <label for="newProdSauce" class="text-slate-700 font-bold">¿Salsa / Término?</label>
                         </div>
                     </div>
-                    <button onclick="addProduct()" class="btn-primary px-4 py-2 rounded-xl text-xs w-full sm:w-auto">➕ Guardar Producto</button>
+                    <button type="button" onclick="addProduct()" class="btn-primary px-4 py-2 rounded-xl text-xs w-full sm:w-auto">➕ Guardar Producto</button>
 
                     <div class="overflow-x-auto mt-2">
                         <table class="w-full text-left text-xs">
@@ -269,7 +269,7 @@
                             <option value="admin">Administrador</option>
                         </select>
                     </div>
-                    <button onclick="addUser()" class="btn-primary px-4 py-2 rounded-xl text-xs w-full sm:w-auto">➕ Guardar Usuario</button>
+                    <button type="button" onclick="addUser()" class="btn-primary px-4 py-2 rounded-xl text-xs w-full sm:w-auto">➕ Guardar Usuario</button>
 
                     <div class="overflow-x-auto mt-2">
                         <table class="w-full text-left text-xs">
@@ -288,7 +288,7 @@
                         <h3 class="font-bold text-xs text-slate-800">📁 Secciones / Categorías</h3>
                         <div class="flex gap-2">
                             <input type="text" id="newCatName" placeholder="Nueva Sección" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
-                            <button onclick="addCategory()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Crear</button>
+                            <button type="button" onclick="addCategory()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Crear</button>
                         </div>
                         <ul id="catList" class="divide-y divide-slate-100 text-xs"></ul>
                     </div>
@@ -297,7 +297,7 @@
                         <h3 class="font-bold text-xs text-slate-800">🥫 Salsas y Términos</h3>
                         <div class="flex gap-2">
                             <input type="text" id="newSauceName" placeholder="Ej: BBQ, Picante" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
-                            <button onclick="addSauce()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Crear</button>
+                            <button type="button" onclick="addSauce()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Crear</button>
                         </div>
                         <ul id="sauceList" class="divide-y divide-slate-100 text-xs"></ul>
                     </div>
@@ -318,8 +318,8 @@
                 <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">Correo Electrónico:</label><input type="email" id="modalFactEmail" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs"></div>
             </div>
             <div class="flex gap-2 justify-end pt-2">
-                <button onclick="closeFacturaModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
-                <button onclick="saveFacturaData()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Guardar Datos</button>
+                <button type="button" onclick="closeFacturaModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
+                <button type="button" onclick="saveFacturaData()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Guardar Datos</button>
             </div>
         </div>
     </div>
@@ -341,8 +341,8 @@
                 <input type="text" id="modalNoteInput" placeholder="Ej: Bien crujiente" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs">
             </div>
             <div class="flex gap-2 justify-end pt-2">
-                <button onclick="closeSauceModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
-                <button onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Agregar al Pedido</button>
+                <button type="button" onclick="closeSauceModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
+                <button type="button" onclick="confirmSauceModal()" class="btn-primary px-3 py-2 rounded-xl text-xs min-h-0">Agregar al Pedido</button>
             </div>
         </div>
     </div>
@@ -352,7 +352,7 @@
         <div class="card p-4 w-full max-w-lg space-y-3 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-100 pb-2">
                 <h3 id="editOrderTitle" class="font-black text-sm text-slate-900 uppercase">✏️ Editar Pedido #</h3>
-                <button onclick="closeEditOrderModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg min-h-0">✕</button>
+                <button type="button" onclick="closeEditOrderModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg min-h-0">✕</button>
             </div>
             
             <!-- AGREGAR NUEVO PRODUCTO AL PEDIDO -->
@@ -360,7 +360,7 @@
                 <span class="text-[11px] font-bold text-slate-700 block">➕ Agregar Producto al Pedido</span>
                 <div class="flex gap-2">
                     <select id="editAddProdSelect" class="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs"></select>
-                    <button onclick="addProdToEditingOrder()" class="btn-primary px-3 py-2 rounded-lg text-xs min-h-0">Agregar</button>
+                    <button type="button" onclick="addProdToEditingOrder()" class="btn-primary px-3 py-2 rounded-lg text-xs min-h-0">Agregar</button>
                 </div>
             </div>
 
@@ -372,8 +372,8 @@
                     NUEVO TOTAL: <span id="editOrderTotal" class="text-red-600">$0.00</span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="closeEditOrderModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
-                    <button onclick="saveOrderEdits()" class="btn-primary px-4 py-2 rounded-xl text-xs min-h-0">💾 Guardar Cambios</button>
+                    <button type="button" onclick="closeEditOrderModal()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-xl text-xs font-bold min-h-0">Cancelar</button>
+                    <button type="button" onclick="saveOrderEdits()" class="btn-primary px-4 py-2 rounded-xl text-xs min-h-0">💾 Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -420,6 +420,19 @@
                 setupNavigation();
             }
         };
+
+        async function apiFetch(endpoint, options = {}) {
+            try {
+                const res = await fetch(API_URL + endpoint, options);
+                if (!res.ok) {
+                    throw new Error("HTTP Status: " + res.status);
+                }
+                return await res.json();
+            } catch (e) {
+                console.error("API Error (" + endpoint + "):", e);
+                return null;
+            }
+        }
 
         async function loadSavedLogo() {
             const config = await apiFetch("/config");
@@ -481,45 +494,45 @@
             alert("Se ha restaurado el logo corporativo de RestControl Pro.");
         }
 
-        async function apiFetch(endpoint, options = {}) {
-            try {
-                const res = await fetch(API_URL + endpoint, options);
-                return await res.json();
-            } catch (e) {
-                console.error("API Error:", e);
-                return null;
-            }
-        }
-
         async function handleLogin(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
+
             const u = document.getElementById("loginUser").value.trim();
             const p = document.getElementById("loginPass").value.trim();
 
-            const users = await apiFetch("/usuarios");
-            if (users) {
-                const user = users.find(x => x.usuario === u && x.clave === p);
-                if (user) {
-                    currentUser = user;
-                    isCustomerMode = false;
-                    document.getElementById("loginScreen").classList.add("hidden");
-                    document.getElementById("appScreen").classList.remove("hidden");
-                    document.getElementById("userInfo").classList.remove("hidden");
-                    
-                    if (window.innerWidth < 768) {
-                        document.getElementById("btnMobileMenu").classList.remove("hidden");
+            try {
+                const users = await apiFetch("/usuarios");
+                if (users && Array.isArray(users)) {
+                    const user = users.find(x => x.usuario === u && x.clave === p);
+                    if (user) {
+                        currentUser = user;
+                        isCustomerMode = false;
+                        document.getElementById("loginScreen").classList.add("hidden");
+                        document.getElementById("appScreen").classList.remove("hidden");
+                        document.getElementById("userInfo").classList.remove("hidden");
+                        
+                        if (window.innerWidth < 768) {
+                            document.getElementById("btnMobileMenu").classList.remove("hidden");
+                        }
+                        
+                        document.getElementById("userBadge").innerText = user.nombre + " (" + user.rol.toUpperCase() + ")";
+                        setupNavigation();
+                        return;
                     }
-                    
-                    document.getElementById("userBadge").innerText = user.nombre + " (" + user.rol.toUpperCase() + ")";
-                    setupNavigation();
-                    return;
                 }
+                alert("Usuario o contraseña incorrectos");
+            } catch (err) {
+                console.error("Error en login:", err);
+                alert("Ocurrió un error al intentar iniciar sesión.");
             }
-            alert("Usuario o contraseña incorrectos");
         }
 
         function logout() {
-            currentUser = null; cart = []; tempFacturaData = null; isCustomerMode = false;
+            currentUser = null; 
+            cart = []; 
+            tempFacturaData = null; 
+            isCustomerMode = false;
+
             if (window.location.search) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -575,6 +588,7 @@
 
             allowed.forEach((v, index) => {
                 const btn = document.createElement("button");
+                btn.type = "button";
                 btn.className = "w-full text-left p-3 rounded-xl font-bold transition text-xs flex items-center gap-2 bg-slate-100 text-slate-800 hover:bg-red-600 hover:text-white";
                 btn.innerText = v.name;
                 btn.onclick = () => {
@@ -588,9 +602,11 @@
 
         function switchView(viewId) {
             ["Pedido", "Caja", "Cocina", "Reportes", "Admin"].forEach(v => {
-                document.getElementById("view" + v).classList.add("hidden");
+                const element = document.getElementById("view" + v);
+                if (element) element.classList.add("hidden");
             });
-            document.getElementById("view" + viewId).classList.remove("hidden");
+            const target = document.getElementById("view" + viewId);
+            if (target) target.classList.remove("hidden");
 
             if (viewId === "Pedido") renderCatalog();
             if (viewId === "Caja") renderCaja();
@@ -639,7 +655,7 @@
                     '<div class="font-black text-xs mb-0.5 leading-tight text-slate-900">' + p.nombre + '</div>' +
                     descHtml +
                     '<div class="text-red-600 font-black text-xs mb-1.5">$' + p.precio.toFixed(2) + '</div>' +
-                    '<button onclick="handleAddToCart(' + p.id + ', \'' + p.nombre + '\', ' + p.precio + ', ' + p.requiere_salsa + ')" class="w-full btn-primary py-1.5 px-2 rounded-lg text-xs min-h-0">Agregar +</button>' +
+                    '<button type="button" onclick="handleAddToCart(' + p.id + ', \'' + p.nombre + '\', ' + p.precio + ', ' + p.requiere_salsa + ')" class="w-full btn-primary py-1.5 px-2 rounded-lg text-xs min-h-0">Agregar +</button>' +
                 '</div>';
             }).join("");
         }
@@ -728,12 +744,12 @@
                     '</div>' +
                     '<div class="flex items-center gap-1.5 shrink-0">' +
                         '<div class="flex items-center bg-white border border-slate-300 rounded-md">' +
-                            '<button onclick="updateCartQuantity(' + idx + ', -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>' +
+                            '<button type="button" onclick="updateCartQuantity(' + idx + ', -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>' +
                             '<span class="px-1.5 font-black text-slate-900 text-xs">' + item.cantidad + '</span>' +
-                            '<button onclick="updateCartQuantity(' + idx + ', 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>' +
+                            '<button type="button" onclick="updateCartQuantity(' + idx + ', 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>' +
                         '</div>' +
                         '<span class="text-red-600 font-black min-w-[45px] text-right">$' + subtotal.toFixed(2) + '</span>' +
-                        '<button onclick="cart.splice(' + idx + ', 1); renderCart();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1">✕</button>' +
+                        '<button type="button" onclick="cart.splice(' + idx + ', 1); renderCart();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1">✕</button>' +
                     '</div>' +
                 '</div>';
             }).join("");
@@ -840,7 +856,6 @@
             container.innerHTML = pending.map(p => {
                 const itemsList = typeof p.items === 'string' ? JSON.parse(p.items) : p.items;
                 
-                // Generar lista detallada de productos para transparencia con el cliente
                 const itemsDetailHtml = itemsList.map(i => {
                     const qty = i.cantidad || 1;
                     const sub = i.precio * qty;
@@ -856,7 +871,6 @@
                         '<span class="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">' + p.mesero + '</span>' +
                     '</div>' +
 
-                    '<!-- DETALLE VISIBLE DE CONSUMO PARA EL CLIENTE -->' +
                     '<div class="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-1">' +
                         '<span class="text-[10px] font-black text-amber-800 uppercase tracking-wider block mb-1">🛒 Detalle del Consumo:</span>' +
                         '<div class="space-y-0.5 max-h-32 overflow-y-auto pr-1">' + itemsDetailHtml + '</div>' +
@@ -880,15 +894,14 @@
                     '</select>' +
 
                     '<div class="grid grid-cols-3 gap-1.5 pt-1">' +
-                        '<button onclick="reimprimirPedidoPorId(' + p.id + ')" class="bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
-                        '<button onclick="openEditOrderModal(' + p.id + ')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✏️ Editar</button>' +
-                        '<button onclick="processPayment(' + p.id + ')" class="btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>' +
+                        '<button type="button" onclick="reimprimirPedidoPorId(' + p.id + ')" class="bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
+                        '<button type="button" onclick="openEditOrderModal(' + p.id + ')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✏️ Editar</button>' +
+                        '<button type="button" onclick="processPayment(' + p.id + ')" class="btn-primary py-2 rounded-xl text-xs min-h-0">💵 COBRAR</button>' +
                     '</div>' +
                 '</div>';
             }).join("");
         }
 
-        // FUNCIONES DE EDICIÓN DE PEDIDO
         async function openEditOrderModal(orderId) {
             const orders = await apiFetch("/pedidos") || [];
             currentEditingOrder = orders.find(x => x.id === orderId);
@@ -929,12 +942,12 @@
                     '</div>' +
                     '<div class="flex items-center gap-2 shrink-0">' +
                         '<div class="flex items-center bg-white border border-slate-300 rounded-lg">' +
-                            '<button onclick="updateEditItemQty(' + idx + ', -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>' +
+                            '<button type="button" onclick="updateEditItemQty(' + idx + ', -1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">-</button>' +
                             '<span class="px-2 font-black text-slate-900 text-xs">' + (item.cantidad || 1) + '</span>' +
-                            '<button onclick="updateEditItemQty(' + idx + ', 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>' +
+                            '<button type="button" onclick="updateEditItemQty(' + idx + ', 1)" class="px-2 py-0.5 font-bold text-slate-600 hover:bg-slate-100 text-xs min-h-0">+</button>' +
                         '</div>' +
                         '<span class="text-red-600 font-black min-w-[50px] text-right">$' + subtotal.toFixed(2) + '</span>' +
-                        '<button onclick="currentEditingItems.splice(' + idx + ', 1); renderEditOrderItems();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1 text-sm">✕</button>' +
+                        '<button type="button" onclick="currentEditingItems.splice(' + idx + ', 1); renderEditOrderItems();" class="text-slate-400 hover:text-red-600 font-bold min-h-0 px-1 text-sm">✕</button>' +
                     '</div>' +
                 '</div>';
             }).join("");
@@ -1008,15 +1021,15 @@
             const pending = orders.filter(p => p.estado === "pendiente");
 
             container.innerHTML = pending.map(p => {
-                const items = JSON.parse(p.items);
+                const items = typeof p.items === 'string' ? JSON.parse(p.items) : p.items;
                 return '<div class="card p-3 border-l-4 border-orange-500 space-y-2">' +
                     '<div class="font-black text-orange-600 text-sm">Orden #' + p.id + ' - ' + p.cliente + '</div>' +
                     '<ul class="text-xs space-y-1 bg-slate-50 p-2 rounded-lg border border-slate-200 font-medium">' +
                         items.map(i => '<li>• ' + (i.cantidad || 1) + 'x ' + i.nombre + '</li>').join("") +
                     '</ul>' +
                     '<div class="flex gap-2">' +
-                        '<button onclick="reimprimirPedidoPorId(' + p.id + ')" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
-                        '<button onclick="markKitchenReady(' + p.id + ')" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✔ LISTO</button>' +
+                        '<button type="button" onclick="reimprimirPedidoPorId(' + p.id + ')" class="w-1/3 bg-slate-200 hover:bg-slate-300 font-bold py-2 rounded-xl text-xs text-slate-800 min-h-0">🖨 Ticket</button>' +
+                        '<button type="button" onclick="markKitchenReady(' + p.id + ')" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl text-xs min-h-0">✔ LISTO</button>' +
                     '</div>' +
                 '</div>';
             }).join("");
@@ -1053,7 +1066,7 @@
             }).join("") : '<div class="text-slate-400 text-xs">Sin ventas registradas</div>';
 
             document.getElementById("reportTableBody").innerHTML = orders.map(p => {
-                const itemsObj = JSON.parse(p.items);
+                const itemsObj = typeof p.items === 'string' ? JSON.parse(p.items) : p.items;
                 const itemsFormatted = itemsObj.map(i => (i.cantidad || 1) + 'x ' + i.nombre).join(", ");
 
                 return '<tr>' +
@@ -1069,7 +1082,7 @@
                     '<td class="p-2">' + p.metodo_pago + '</td>' +
                     '<td class="p-2 font-black text-emerald-600">$' + p.total.toFixed(2) + '</td>' +
                     '<td class="p-2"><span class="px-2 py-0.5 text-[10px] rounded-full font-bold ' + (p.estado === 'cobrado' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700') + '">' + p.estado + '</span></td>' +
-                    '<td class="p-2"><button onclick="reimprimirPedidoPorId(' + p.id + ')" class="bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg font-bold min-h-0">🖨 Ticket</button></td>' +
+                    '<td class="p-2"><button type="button" onclick="reimprimirPedidoPorId(' + p.id + ')" class="bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg font-bold min-h-0">🖨 Ticket</button></td>' +
                 '</tr>';
             }).join("");
         }
@@ -1097,7 +1110,7 @@
             let totalVentas = 0;
             const rows = conFactura.map(p => {
                 totalVentas += p.total;
-                const itemsObj = JSON.parse(p.items);
+                const itemsObj = typeof p.items === 'string' ? JSON.parse(p.items) : p.items;
                 const itemsText = itemsObj.map(i => (i.cantidad || 1) + 'x ' + i.nombre).join(", ");
 
                 return [
@@ -1181,7 +1194,7 @@
                     '<td class="p-2 text-red-600 font-black">$' + p.precio.toFixed(2) + '</td>' +
                     '<td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold">' + p.categoria + '</span></td>' +
                     '<td class="p-2">' + (p.requiere_salsa ? '✅ Sí' : '❌ No') + '</td>' +
-                    '<td class="p-2"><button onclick="deleteProduct(' + p.id + ')" class="text-red-600 hover:underline font-bold text-xs min-h-0">Eliminar</button></td>' +
+                    '<td class="p-2"><button type="button" onclick="deleteProduct(' + p.id + ')" class="text-red-600 hover:underline font-bold text-xs min-h-0">Eliminar</button></td>' +
                 '</tr>';
             }).join("");
         }
@@ -1237,8 +1250,8 @@
                     '<td class="p-2 font-mono text-red-600 font-bold">' + u.usuario + '</td>' +
                     '<td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold uppercase">' + u.rol + '</span></td>' +
                     '<td class="p-2 flex items-center gap-1.5">' +
-                        '<button onclick="changeUserPassword(\'' + u.usuario + '\', \'' + u.nombre + '\', \'' + u.rol + '\')" class="text-sky-600 font-bold text-xs min-h-0 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200">🔑 Clave</button>' +
-                        '<button onclick="deleteUser(\'' + u.usuario + '\')" class="text-red-600 font-bold text-xs min-h-0 px-1">Eliminar</button>' +
+                        '<button type="button" onclick="changeUserPassword(\'' + u.usuario + '\', \'' + u.nombre + '\', \'' + u.rol + '\')" class="text-sky-600 font-bold text-xs min-h-0 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200">🔑 Clave</button>' +
+                        '<button type="button" onclick="deleteUser(\'' + u.usuario + '\')" class="text-red-600 font-bold text-xs min-h-0 px-1">Eliminar</button>' +
                     '</td>' +
                 '</tr>';
             }).join("");
@@ -1291,7 +1304,7 @@
             list.innerHTML = cats.map(c => {
                 return '<li class="py-2 flex justify-between items-center font-medium">' +
                     '<span>' + c.nombre + '</span>' +
-                    '<button onclick="deleteCategory(' + c.id + ')" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>' +
+                    '<button type="button" onclick="deleteCategory(' + c.id + ')" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>' +
                 '</li>';
             }).join("");
         }
@@ -1324,7 +1337,7 @@
             list.innerHTML = sauces.map(s => {
                 return '<li class="py-2 flex justify-between items-center font-medium">' +
                     '<span>' + s.nombre + '</span>' +
-                    '<button onclick="deleteSauce(' + s.id + ')" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>' +
+                    '<button type="button" onclick="deleteSauce(' + s.id + ')" class="text-red-600 font-bold text-xs min-h-0">Eliminar</button>' +
                 '</li>';
             }).join("");
         }
