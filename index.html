@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ New Haven POS Pro Web</title>
+    <title>🛡️ RestControl Pro Web</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -20,18 +20,24 @@
 </head>
 <body class="min-h-screen flex flex-col relative bg-slate-100 text-slate-800">
 
-    <!-- OVERLAY PARA MÓVIL (FONDO OSCURO AL ABRIR EL MENÚ) -->
+    <!-- OVERLAY PARA MÓVIL -->
     <div id="drawerOverlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/60 z-40 hidden transition-opacity"></div>
 
-    <!-- HEADER / BARRA SUPERIOR CON LOGO -->
+    <!-- HEADER / BARRA SUPERIOR CON LOGO CORPORATIVO -->
     <header class="bg-white border-b border-slate-200 px-4 py-2.5 flex justify-between items-center shrink-0 z-30 sticky top-0 shadow-sm">
         <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0">
-                <span class="headerLogoFallback text-lg">⚡</span>
-                <img class="headerLogoImg w-full h-full object-cover hidden" src="" alt="Logo">
+            <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-slate-900 border border-slate-800 shrink-0 p-1.5 shadow-sm">
+                <!-- LOGO CORPORATIVO VECTORIAL (SVG) -->
+                <svg id="defaultLogoSvgHeader" class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 5 L85 20 V50 C85 70 50 92 50 92 C50 92 15 70 15 50 V20 L50 5 Z" fill="#0F172A" stroke="#DC2626" stroke-width="4"/>
+                    <path d="M42 28 V46 C42 50 44 52 47 52 V72 H53 V52 C56 52 58 50 58 46 V28" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M47 28 V38 M53 28 V38" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M62 38 L45 56 H54 L38 72" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <img class="headerLogoImg w-full h-full object-cover hidden" src="" alt="Logo Custom">
             </div>
             <h1 class="text-base md:text-xl font-black text-slate-900 flex items-center gap-2 tracking-wide">
-                New Haven POS
+                RestControl <span class="text-red-600 font-extrabold text-xs md:text-sm bg-red-50 px-2 py-0.5 rounded-md border border-red-200">PRO</span>
             </h1>
         </div>
         <div class="flex items-center gap-3">
@@ -42,15 +48,20 @@
         </div>
     </header>
 
-    <!-- PANTALLA DE LOGIN CON LOGO -->
+    <!-- PANTALLA DE LOGIN CON LOGO RESTCONTROL PRO -->
     <div id="loginScreen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
         <div class="card p-6 md:p-8 w-full max-w-md text-center">
-            <div class="w-20 h-20 rounded-2xl mx-auto mb-3 overflow-hidden flex items-center justify-center bg-slate-100 border border-slate-200 shadow-inner">
-                <span class="loginLogoFallback text-4xl">⚡</span>
+            <div class="w-24 h-24 rounded-2xl mx-auto mb-4 overflow-hidden flex items-center justify-center bg-slate-900 border-2 border-red-600 shadow-xl p-3">
+                <svg id="defaultLogoSvgLogin" class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 5 L85 20 V50 C85 70 50 92 50 92 C50 92 15 70 15 50 V20 L50 5 Z" fill="#0F172A" stroke="#DC2626" stroke-width="4"/>
+                    <path d="M42 28 V46 C42 50 44 52 47 52 V72 H53 V52 C56 52 58 50 58 46 V28" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M47 28 V38 M53 28 V38" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M62 38 L45 56 H54 L38 72" stroke="#EF4444" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
                 <img class="loginLogoImg w-full h-full object-cover hidden" src="" alt="Logo Negocio">
             </div>
-            <h2 class="text-2xl font-black text-slate-900 mb-1">New Haven POS</h2>
-            <p class="text-slate-500 text-xs mb-6 font-medium">Inicio de Sesión Centralizado</p>
+            <h2 class="text-2xl font-black text-slate-900 mb-0.5">RestControl Pro</h2>
+            <p class="text-slate-500 text-xs mb-6 font-semibold uppercase tracking-wider">Sistema para llevar el control de tu Restaurant</p>
             <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
                 <div>
                     <label class="text-xs text-slate-600 font-bold block mb-1">Usuario</label>
@@ -62,7 +73,7 @@
                 </div>
                 <button type="submit" class="w-full btn-primary p-3 rounded-xl text-sm uppercase tracking-wider">INGRESAR AL SISTEMA</button>
             </form>
-            <p class="text-[11px] text-slate-400 mt-4">Demo: admin/admin, mesero1/1234, multi1/1234</p>
+            <p class="text-[11px] text-slate-400 mt-4"></p>
         </div>
     </div>
 
@@ -72,11 +83,15 @@
         <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-4 shadow-2xl md:shadow-none border-r border-slate-200 md:static md:w-64 shrink-0 hidden">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0">
-                        <span class="headerLogoFallback text-base">⚡</span>
+                    <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-slate-900 border border-slate-800 shrink-0 p-1">
+                        <svg class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M50 5 L85 20 V50 C85 70 50 92 50 92 C50 92 15 70 15 50 V20 L50 5 Z" fill="#0F172A" stroke="#DC2626" stroke-width="4"/>
+                            <path d="M42 28 V46 C42 50 44 52 47 52 V72 H53 V52 C56 52 58 50 58 46 V28" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M62 38 L45 56 H54 L38 72" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         <img class="headerLogoImg w-full h-full object-cover hidden" src="" alt="Logo">
                     </div>
-                    <span class="font-black text-slate-900 text-xs tracking-wider uppercase">New Haven POS</span>
+                    <span class="font-black text-slate-900 text-xs tracking-wider uppercase">RestControl Pro</span>
                 </div>
                 <button onclick="toggleMobileMenu()" class="text-slate-500 font-bold text-lg md:hidden">✕</button>
             </div>
@@ -90,10 +105,10 @@
         </aside>
 
         <main class="flex-1 p-3 md:p-6 overflow-y-auto">
-            <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR (CARRITO ARRIBA, MENÚ DE PRODUCTOS DEBAJO) -->
+            <!-- VISTA: TOMAR PEDIDO / AUTOPEDIDO QR -->
             <section id="viewPedido" class="hidden space-y-4">
                 <div class="flex flex-col gap-4">
-                    <!-- CARRITO Y RESUMEN (ARRIBA) -->
+                    <!-- CARRITO Y RESUMEN -->
                     <div class="card p-4 flex flex-col space-y-3">
                         <h3 class="font-black text-sm md:text-base flex justify-between items-center text-slate-900 uppercase">
                             <span id="orderTitle">Orden del Cliente</span>
@@ -126,7 +141,7 @@
                         </div>
                     </div>
 
-                    <!-- MENÚ DE PRODUCTOS Y CATÁLOGO (DEBAJO DE LA ORDEN) -->
+                    <!-- MENÚ DE PRODUCTOS -->
                     <div class="space-y-3">
                         <div class="card p-3 flex items-center gap-2">
                             <label class="font-bold text-xs shrink-0 text-slate-700">📁 Sección:</label>
@@ -192,14 +207,14 @@
             <section id="viewAdmin" class="hidden space-y-4">
                 <h2 class="text-lg font-black text-slate-900 uppercase">⚙️ Configuración del Sistema</h2>
 
-                <!-- APARTADO PARA SUBIR LOGO DEL NEGOCIO -->
+                <!-- LOGO DEL NEGOCIO -->
                 <div class="card p-4 space-y-3 border-l-4 border-purple-600">
-                    <h3 class="font-black text-sm text-purple-700 uppercase">🖼️ Logo de tu Negocio</h3>
-                    <p class="text-xs text-slate-500 font-medium">Sube el logo aquí y se guardará en la nube para que se muestre en todos tus celulares y computadoras automáticamente.</p>
+                    <h3 class="font-black text-sm text-purple-700 uppercase">🖼️ Logo Personalizado de tu Negocio</h3>
+                    <p class="text-xs text-slate-500 font-medium">Sube tu propio logo si deseas reemplazar el logo por defecto de RestControl Pro.</p>
                     <div class="flex flex-wrap items-center gap-3">
                         <input type="file" id="logoFileInput" accept="image/*" class="bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs text-slate-700">
                         <button onclick="uploadBusinessLogo()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs">💾 Guardar Logo en la Nube</button>
-                        <button onclick="removeBusinessLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs">🗑️ Quitar Logo</button>
+                        <button onclick="removeBusinessLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs">🗑️ Quitar Logo Personalizado</button>
                     </div>
                 </div>
 
@@ -308,7 +323,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE SELECCIÓN DE HASTA 2 SALSAS -->
+    <!-- MODAL DE SALSAS -->
     <div id="sauceModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
         <div class="card p-4 w-full max-w-md space-y-3">
             <h3 id="modalTitle" class="font-black text-sm text-slate-900 uppercase"></h3>
@@ -372,17 +387,19 @@
             const config = await apiFetch("/config");
             if (config && config.logo_negocio) {
                 currentGlobalLogo = config.logo_negocio;
+                
+                document.getElementById("defaultLogoSvgHeader").classList.add("hidden");
+                document.getElementById("defaultLogoSvgLogin").classList.add("hidden");
+
                 document.querySelectorAll(".headerLogoImg").forEach(img => {
                     img.src = currentGlobalLogo;
                     img.classList.remove("hidden");
                 });
-                document.querySelectorAll(".headerLogoFallback").forEach(span => span.classList.add("hidden"));
 
                 document.querySelectorAll(".loginLogoImg").forEach(img => {
                     img.src = currentGlobalLogo;
                     img.classList.remove("hidden");
                 });
-                document.querySelectorAll(".loginLogoFallback").forEach(span => span.classList.add("hidden"));
             }
         }
 
@@ -400,7 +417,7 @@
 
             if (res && res.success) {
                 await loadSavedLogo();
-                alert("🎉 ¡Logo guardado globalmente en la base de datos! Ahora se verá en cualquier celular y computadora.");
+                alert("🎉 ¡Logo personalizado guardado exitosamente!");
                 fileInput.value = "";
             } else {
                 alert("Error al guardar el logo en la nube.");
@@ -408,7 +425,7 @@
         }
 
         async function removeBusinessLogo() {
-            if (!confirm("¿Deseas quitar el logo del negocio de la base de datos?")) return;
+            if (!confirm("¿Deseas quitar el logo personalizado y volver al logo corporativo de RestControl Pro?")) return;
             
             await apiFetch("/config", {
                 method: "POST",
@@ -418,12 +435,12 @@
 
             currentGlobalLogo = null;
             document.querySelectorAll(".headerLogoImg").forEach(img => img.classList.add("hidden"));
-            document.querySelectorAll(".headerLogoFallback").forEach(span => span.classList.remove("hidden"));
-
             document.querySelectorAll(".loginLogoImg").forEach(img => img.classList.add("hidden"));
-            document.querySelectorAll(".loginLogoFallback").forEach(span => span.classList.remove("hidden"));
 
-            alert("Logo removido correctamente.");
+            document.getElementById("defaultLogoSvgHeader").classList.remove("hidden");
+            document.getElementById("defaultLogoSvgLogin").classList.remove("hidden");
+
+            alert("Se ha restaurado el logo corporativo de RestControl Pro.");
         }
 
         async function apiFetch(endpoint, options = {}) {
@@ -755,9 +772,9 @@
             }).join("");
 
             const ticketHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #' + orderId + '</title>' +
-                '<style>@page { size: 80mm auto; margin: 0mm; } body { font-family: "Courier New", Courier, monospace; width: 72mm; margin: 0 auto; padding: 5mm 0; color: #000; background: #fff; } .text-center { text-align: center; } .header { border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 8px; } .title { font-size: 18px; font-weight: bold; margin: 0; } .subtitle { font-size: 14px; margin: 2px 0; } .reimpresion { font-size: 13px; font-weight: bold; background: #000; color: #fff; padding: 2px 4px; margin-top: 4px; display: inline-block; } .meta { font-size: 12px; margin-bottom: 6px; } .items { border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px; } .footer { font-size: 11px; text-align: center; margin-top: 10px; }</style>' +
+                '<style>@page { size: 80mm auto; margin: 0mm; } body { font-family: "Courier New", Courier, monospace; width: 72mm; margin: 0 auto; padding: 5mm 0; color: #000; background: #fff; } .text-center { text-align: center; } .header { border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 8px; } .title { font-size: 16px; font-weight: bold; margin: 0; } .subtitle { font-size: 13px; margin: 2px 0; } .reimpresion { font-size: 13px; font-weight: bold; background: #000; color: #fff; padding: 2px 4px; margin-top: 4px; display: inline-block; } .meta { font-size: 12px; margin-bottom: 6px; } .items { border-bottom: 2px dashed #000; padding-bottom: 8px; margin-bottom: 8px; } .footer { font-size: 11px; text-align: center; margin-top: 10px; }</style>' +
                 '</head><body>' +
-                '<div class="header text-center">' + logoHtml + '<div class="title">🔥 NEW HAVEN PEDIDO 🔥</div><div class="subtitle">ORDEN #' + orderId + '</div>' +
+                '<div class="header text-center">' + logoHtml + '<div class="title">🔥 RESTCONTROL PRO 🔥</div><div class="subtitle">ORDEN #' + orderId + '</div>' +
                 (esReimpresion ? '<div class="reimpresion">** REIMPRESIÓN **</div>' : '') +
                 '</div><div class="meta"><div><strong>Mesa/Cliente:</strong> ' + cliente + '</div><div><strong>Atendido por:</strong> ' + mesero + '</div><div><strong>Fecha:</strong> ' + fechaHora + '</div></div>' +
                 '<div class="items"><div style="font-size:12px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:4px;"><strong>CANT. DESCRIPCIÓN</strong></div>' + itemsHtml + '</div>' +
@@ -900,7 +917,7 @@
 
             doc.setFontSize(18);
             doc.setTextColor(220, 38, 38);
-            doc.text("⚡ New Haven POS Pro - Reporte de Facturación (Contabilidad)", 14, 15);
+            doc.text("🛡️ RestControl Pro - Reporte de Facturación", 14, 15);
 
             doc.setFontSize(10);
             doc.setTextColor(100);
@@ -922,7 +939,7 @@
 
             doc.autoTable({
                 startY: 28,
-                head: [['ID', 'Fecha/Hora', 'Razón Social', 'RUC/CI', 'Dirección', 'Teléfono', 'Correo', 'Detalle Pedido (Agrupado)', 'Forma Pago', 'Total']],
+                head: [['ID', 'Fecha/Hora', 'Razón Social', 'RUC/CI', 'Dirección', 'Teléfono', 'Correo', 'Detalle Pedido', 'Forma Pago', 'Total']],
                 body: rows,
                 styles: { fontSize: 8, cellPadding: 2 },
                 headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
@@ -935,7 +952,7 @@
             doc.text("Total Facturas Registradas: " + conFactura.length, 14, finalY);
             doc.text("Monto Total Facturado: $" + totalVentas.toFixed(2), 14, finalY + 6);
 
-            doc.save("Reporte_Facturacion_Contadora_" + (dateVal || 'General') + ".pdf");
+            doc.save("RestControl_Pro_Facturacion_" + (dateVal || 'General') + ".pdf");
         }
 
         function renderAdminConfig() {
@@ -957,14 +974,14 @@
             for (let i = 1; i <= count; i++) {
                 qrCards += '<div style="border: 2px solid #0f172a; border-radius: 12px; padding: 15px; text-align: center; background: #fff; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center;">' +
                     logoHtml +
-                    '<h2 style="margin: 0 0 3px 0; color: #dc2626; font-size: 16px; font-weight: 900;">⚡ NEW HAVEN POS</h2>' +
+                    '<h2 style="margin: 0 0 3px 0; color: #dc2626; font-size: 16px; font-weight: 900;">🛡️ RESTCONTROL PRO</h2>' +
                     '<h1 style="margin: 0 0 8px 0; color: #0f172a; font-size: 22px; font-weight: 900;">MESA ' + i + '</h1>' +
                     '<div id="qr_' + i + '" style="margin: 5px auto; display: flex; justify-content: center;"></div>' +
                     '<p style="margin: 8px 0 0 0; font-size: 11px; font-weight: 700; color: #475569;">📷 Escanea para ver el menú y hacer tu pedido</p>' +
                 '</div>';
             }
 
-            const htmlContent = '<!DOCTYPE html><html><head><title>Impresión de Códigos QR para Mesas</title>' +
+            const htmlContent = '<!DOCTYPE html><html><head><title>Impresión QR - RestControl Pro</title>' +
                 '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
                 '<style>@page { size: A4; margin: 10mm; } body { font-family: system-ui, sans-serif; background: #fff; margin: 0; padding: 10px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }</style>' +
                 '</head><body>' +
